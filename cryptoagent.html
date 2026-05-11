@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>CryptoAgent</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --bg: #0a0a0f;
+  --bg2: #111118;
+  --bg3: #18181f;
+  --bg4: #1f1f2a;
+  --border: rgba(255,255,255,0.07);
+  --border2: rgba(255,255,255,0.13);
+  --text: #f0f0f5;
+  --text2: #9090a8;
+  --text3: #55556a;
+  --accent: #7b61ff;
+  --accent2: #a78bfa;
+  --green: #22d3a0;
+  --green-bg: rgba(34,211,160,0.1);
+  --red: #f87171;
+  --red-bg: rgba(248,113,113,0.1);
+  --amber: #fbbf24;
+  --amber-bg: rgba(251,191,36,0.1);
+  --mono: 'Space Mono', monospace;
+  --sans: 'DM Sans', sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;}
+
+/* grid noise texture */
+body::before{content:'';position:fixed;inset:0;background-image:radial-gradient(ellipse 80% 60% at 50% -10%,rgba(123,97,255,0.15),transparent);pointer-events:none;z-index:0;}
+
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 0 100px;}
+
+/* TOP NAV */
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:20px 20px 0;}
+.logo{font-family:var(--mono);font-size:15px;font-weight:700;letter-spacing:0.05em;color:var(--text);}
+.logo span{color:var(--accent2);}
+.live-dot{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);font-family:var(--mono);}
+.live-dot::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+
+/* TABS */
+.tabs{display:flex;gap:4px;padding:20px 20px 0;}
+.tab{flex:1;padding:10px;border-radius:10px;border:0.5px solid var(--border);background:transparent;color:var(--text3);font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.2s;}
+.tab.active{background:var(--bg3);border-color:var(--border2);color:var(--text);}
+.tab:hover:not(.active){color:var(--text2);}
+
+/* PANELS */
+.panel{display:none;padding:16px 20px 0;}
+.panel.active{display:block;}
+
+/* MACRO STRIP */
+.macro-strip{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+.macro-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:14px;}
+.macro-label{font-size:10px;color:var(--text3);font-family:var(--mono);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+.macro-value{font-size:20px;font-weight:600;font-family:var(--mono);}
+.macro-sub{font-size:11px;color:var(--text3);margin-top:3px;}
+
+/* FEAR GREED */
+.fg-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:14px;margin-bottom:8px;}
+.fg-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.fg-val{font-size:28px;font-weight:700;font-family:var(--mono);}
+.fg-track{height:6px;border-radius:999px;background:linear-gradient(to right,#f87171,#fbbf24,#34d399,#22d3a0);position:relative;margin-bottom:4px;}
+.fg-thumb{width:12px;height:12px;border-radius:50%;background:#fff;position:absolute;top:-3px;transform:translateX(-50%);box-shadow:0 0 6px rgba(0,0,0,0.5);}
+.fg-labels{display:flex;justify-content:space-between;font-size:10px;color:var(--text3);}
+
+/* DOMINANCE */
+.dom-bar{height:5px;border-radius:999px;display:flex;gap:2px;overflow:hidden;margin:6px 0;}
+.dom-seg{height:100%;border-radius:2px;}
+
+/* SECTION HEADER */
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin:20px 0 10px;}
+.sec-title{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:0.1em;text-transform:uppercase;}
+.sec-action{font-size:11px;color:var(--accent2);cursor:pointer;background:none;border:none;font-family:var(--sans);}
+
+/* COIN LIST */
+.coin-list{display:flex;flex-direction:column;gap:6px;}
+.coin-row{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:border-color 0.15s;}
+.coin-row:hover{border-color:var(--border2);}
+.coin-rank{font-size:10px;color:var(--text3);font-family:var(--mono);width:22px;text-align:right;}
+.coin-info{flex:1;}
+.coin-name{font-size:14px;font-weight:500;}
+.coin-symbol{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.coin-right{text-align:right;}
+.coin-price{font-size:14px;font-weight:500;font-family:var(--mono);}
+.coin-chg{font-size:12px;font-family:var(--mono);}
+.signal-pill{font-size:10px;font-family:var(--mono);padding:3px 8px;border-radius:999px;margin-top:3px;display:inline-block;}
+.sig-buy{background:var(--green-bg);color:var(--green);}
+.sig-hold{background:var(--amber-bg);color:var(--amber);}
+.sig-sell{background:var(--red-bg);color:var(--red);}
+
+/* PORTFOLIO */
+.portfolio-summary{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:20px;margin-bottom:16px;text-align:center;}
+.port-total-label{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+.port-total{font-size:36px;font-weight:700;font-family:var(--mono);}
+.port-pnl{font-size:14px;font-family:var(--mono);margin-top:4px;}
+
+/* ADD POSITION */
+.add-btn{width:100%;padding:12px;border-radius:12px;border:0.5px dashed var(--border2);background:transparent;color:var(--accent2);font-family:var(--sans);font-size:14px;cursor:pointer;transition:all 0.2s;margin-bottom:16px;}
+.add-btn:hover{background:var(--bg3);border-style:solid;}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:100;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px 20px 0 0;padding:24px 20px 40px;width:100%;max-width:480px;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:20px;}
+.form-group{margin-bottom:14px;}
+.form-label{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;display:block;}
+.form-input{width:100%;padding:12px 14px;border-radius:10px;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:14px;outline:none;}
+.form-input:focus{border-color:var(--accent);}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.modal-btns{display:flex;gap:8px;margin-top:20px;}
+.btn-cancel{flex:1;padding:12px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--sans);font-size:14px;cursor:pointer;}
+.btn-save{flex:2;padding:12px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;}
+.btn-save:hover{background:var(--accent2);}
+
+/* POSITION CARD */
+.position-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:8px;}
+.pos-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px;}
+.pos-name{font-size:16px;font-weight:600;}
+.pos-symbol{font-size:11px;color:var(--text3);font-family:var(--mono);}
+.pos-delete{background:none;border:none;color:var(--text3);cursor:pointer;font-size:16px;padding:2px;}
+.pos-delete:hover{color:var(--red);}
+.pos-metrics{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:14px;}
+.pos-metric{text-align:center;}
+.pos-metric-label{font-size:10px;color:var(--text3);font-family:var(--mono);}
+.pos-metric-value{font-size:13px;font-weight:500;font-family:var(--mono);margin-top:2px;}
+.pos-signal{border-radius:10px;padding:12px;margin-top:4px;}
+.pos-signal-title{font-size:11px;font-family:var(--mono);letter-spacing:0.06em;text-transform:uppercase;margin-bottom:4px;}
+.pos-signal-text{font-size:12px;line-height:1.5;}
+.sig-buy-bg{background:var(--green-bg);border:0.5px solid rgba(34,211,160,0.2);}
+.sig-hold-bg{background:var(--amber-bg);border:0.5px solid rgba(251,191,36,0.2);}
+.sig-sell-bg{background:var(--red-bg);border:0.5px solid rgba(248,113,113,0.2);}
+
+/* BOTTOM NAV */
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(10,10,15,0.95);border-top:0.5px solid var(--border);backdrop-filter:blur(20px);display:flex;padding:12px 20px 24px;gap:4px;z-index:50;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px;border-radius:10px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-family:var(--sans);font-size:10px;transition:all 0.2s;}
+.nav-btn.active{color:var(--accent2);background:rgba(167,139,250,0.1);}
+.nav-btn svg{width:20px;height:20px;stroke-width:1.5;}
+
+/* SKELETON */
+.skel{background:var(--bg4);border-radius:6px;animation:shimmer 1.5s infinite;}
+@keyframes shimmer{0%,100%{opacity:0.4}50%{opacity:0.9}}
+
+/* REFRESH BTN */
+.refresh-row{display:flex;justify-content:flex-end;margin-bottom:8px;}
+.refresh-small{background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);padding:5px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;gap:5px;}
+.refresh-small:hover{border-color:var(--border2);color:var(--text2);}
+.spin{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.positive{color:var(--green);}
+.negative{color:var(--red);}
+.neutral-color{color:var(--text2);}
+
+.empty-state{text-align:center;padding:40px 20px;color:var(--text3);font-size:13px;line-height:1.6;}
+.empty-icon{font-size:32px;margin-bottom:12px;}
+
+.search-input{width:100%;padding:10px 14px;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:13px;outline:none;margin-bottom:8px;}
+.search-input:focus{border-color:var(--accent);}
+.search-results{max-height:160px;overflow-y:auto;border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);}
+.search-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;}
+.search-item:last-child{border-bottom:none;}
+.search-item:hover{background:var(--bg4);}
+.search-item-symbol{font-family:var(--mono);color:var(--text3);font-size:11px;}
+
+.update-time{font-size:10px;color:var(--text3);font-family:var(--mono);text-align:center;padding:8px 0;}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <div class="logo">crypto<span>agent</span></div>
+    <div class="live-dot" id="live-label">caricamento...</div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('market')">📊 Mercato</button>
+    <button class="tab" onclick="switchTab('portfolio')">💼 Portafoglio</button>
+  </div>
+
+  <!-- MARKET PANEL -->
+  <div class="panel active" id="panel-market">
+    <div class="refresh-row">
+      <button class="refresh-small" onclick="loadMarket()" id="refresh-btn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" style="width:12px;height:12px;" id="refresh-icon"><path d="M1 4v6h6M23 20v-6h-6"/><path d="M20.49 9A9 9 0 1 0 21.9 14.39"/></svg>
+        aggiorna
+      </button>
+    </div>
+
+    <!-- Fear & Greed -->
+    <div class="fg-card" id="fg-card">
+      <div class="skel" style="height:14px;width:120px;margin-bottom:10px;"></div>
+      <div class="skel" style="height:28px;width:80px;margin-bottom:10px;"></div>
+      <div class="skel" style="height:6px;border-radius:999px;"></div>
+    </div>
+
+    <!-- Macro -->
+    <div class="macro-strip" id="macro-strip">
+      <div class="macro-card"><div class="skel" style="height:12px;width:80%;margin-bottom:8px;"></div><div class="skel" style="height:24px;width:60%;"></div></div>
+      <div class="macro-card"><div class="skel" style="height:12px;width:80%;margin-bottom:8px;"></div><div class="skel" style="height:24px;width:60%;"></div></div>
+      <div class="macro-card"><div class="skel" style="height:12px;width:80%;margin-bottom:8px;"></div><div class="skel" style="height:24px;width:60%;"></div></div>
+      <div class="macro-card"><div class="skel" style="height:12px;width:80%;margin-bottom:8px;"></div><div class="skel" style="height:24px;width:60%;"></div></div>
+    </div>
+
+    <!-- Top movers -->
+    <div class="sec-header">
+      <span class="sec-title">Top movers 24h</span>
+      <button class="sec-action" onclick="toggleView()">vedi tutti</button>
+    </div>
+    <div class="coin-list" id="coin-list">
+      ${[1,2,3,4,5].map(()=>`<div class="coin-row"><div class="skel" style="width:22px;height:14px;"></div><div style="flex:1;"><div class="skel" style="height:14px;width:60%;margin-bottom:5px;"></div><div class="skel" style="height:11px;width:30%;"></div></div><div style="text-align:right;"><div class="skel" style="height:14px;width:70px;margin-bottom:5px;"></div><div class="skel" style="height:11px;width:50px;"></div></div></div>`).join('')}
+    </div>
+    <div class="update-time" id="update-time"></div>
+  </div>
+
+  <!-- PORTFOLIO PANEL -->
+  <div class="panel" id="panel-portfolio">
+    <div class="portfolio-summary" id="port-summary">
+      <div class="port-total-label">Valore portafoglio</div>
+      <div class="port-total" id="port-total">$0.00</div>
+      <div class="port-pnl" id="port-pnl"></div>
+    </div>
+    <button class="add-btn" onclick="openAddModal()">+ aggiungi posizione</button>
+    <div id="positions-list"></div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-market" onclick="switchTab('market')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    Mercato
+  </button>
+  <button class="nav-btn" id="nav-portfolio" onclick="switchTab('portfolio')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/></svg>
+    Portafoglio
+  </button>
+</div>
+
+<!-- ADD MODAL -->
+<div class="modal-overlay" id="modal" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-title">Aggiungi posizione</div>
+    <div class="form-group">
+      <label class="form-label">Cerca token</label>
+      <input class="search-input" id="token-search" type="text" placeholder="es. Bitcoin, ETH, SOL..." oninput="searchToken()" autocomplete="off"/>
+      <div class="search-results" id="search-results" style="display:none;"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label class="form-label">Quantità</label>
+        <input class="form-input" id="qty-input" type="number" placeholder="0.5" step="any" min="0"/>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Prezzo acquisto $</label>
+        <input class="form-input" id="buy-price-input" type="number" placeholder="45000" step="any" min="0"/>
+      </div>
+    </div>
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">annulla</button>
+      <button class="btn-save" onclick="savePosition()">salva</button>
+    </div>
+  </div>
+</div>
+
+<script>
+let allCoins = [];
+let globalData = null;
+let fearGreed = null;
+let showAll = false;
+let selectedCoin = null;
+let positions = JSON.parse(localStorage.getItem('cryptoagent_positions') || '[]');
+
+function switchTab(tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(n => n.classList.remove('active'));
+  document.getElementById('panel-' + tab).classList.add('active');
+  document.querySelectorAll('.tab')[tab === 'market' ? 0 : 1].classList.add('active');
+  document.getElementById('nav-' + tab).classList.add('active');
+  if (tab === 'portfolio') renderPortfolio();
+}
+
+function toggleView() {
+  showAll = !showAll;
+  document.querySelector('.sec-action').textContent = showAll ? 'mostra meno' : 'vedi tutti';
+  renderCoins();
+}
+
+function fmt(n, d=2) {
+  if (n === null || n === undefined || isNaN(n)) return '$—';
+  if (n >= 1e12) return '$' + (n/1e12).toFixed(2) + 'T';
+  if (n >= 1e9) return '$' + (n/1e9).toFixed(2) + 'B';
+  if (n >= 1e6) return '$' + (n/1e6).toFixed(2) + 'M';
+  if (n >= 1) return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:d});
+  return '$' + n.toFixed(6);
+}
+
+function computeSignal(coin, fgVal, btcDom) {
+  if (!coin) return {label:'N/D', cls:'sig-hold', bgcls:'sig-hold-bg', text:'Dati insufficienti.'};
+  const chg24 = coin.price_change_percentage_24h || 0;
+  const chg7 = coin.price_change_percentage_7d_in_currency || 0;
+  const vol = coin.total_volume || 0;
+  const mcap = coin.market_cap || 1;
+  const volRatio = vol / mcap;
+  const rank = coin.market_cap_rank || 999;
+
+  let score = 0;
+  let reasons = [];
+
+  // Fear & Greed
+  if (fgVal < 25) { score -= 2; reasons.push('paura estrema nel mercato'); }
+  else if (fgVal < 45) { score -= 1; reasons.push('sentiment negativo'); }
+  else if (fgVal > 75) { score += 1; reasons.push('greed elevato (attenzione top)'); }
+  else if (fgVal > 55) { score += 1; reasons.push('sentiment positivo'); }
+
+  // Trend 24h
+  if (chg24 > 5) { score += 2; reasons.push(`+${chg24.toFixed(1)}% nelle ultime 24h`); }
+  else if (chg24 > 1) { score += 1; reasons.push(`trend 24h positivo`); }
+  else if (chg24 < -5) { score -= 2; reasons.push(`-${Math.abs(chg24).toFixed(1)}% nelle ultime 24h`); }
+  else if (chg24 < -1) { score -= 1; reasons.push('trend 24h negativo'); }
+
+  // Trend 7gg
+  if (chg7 > 10) { score += 1; reasons.push('momentum settimanale forte'); }
+  else if (chg7 < -10) { score -= 1; reasons.push('trend settimanale debole'); }
+
+  // Volume
+  if (volRatio > 0.15) { score += 1; reasons.push('volumi elevati'); }
+  else if (volRatio < 0.03) { score -= 1; reasons.push('volumi bassi'); }
+
+  // Rank
+  if (rank <= 10) score += 1;
+  else if (rank > 50) score -= 0.5;
+
+  // BTC dominance
+  if (btcDom > 55 && rank > 10) { score -= 1; reasons.push('dominanza BTC alta (sfavorevole per altcoin)'); }
+  else if (btcDom < 45 && rank > 10) { score += 1; reasons.push('rotazione verso altcoin in corso'); }
+
+  let label, cls, bgcls, verdict;
+  if (score >= 3) {
+    label = '▲ POSITIVO'; cls = 'sig-buy'; bgcls = 'sig-buy-bg';
+    verdict = 'I dati suggeriscono un contesto favorevole. Sentiment e trend tecnico sono allineati positivamente.';
+  } else if (score >= 1) {
+    label = '◆ NEUTRO+'; cls = 'sig-buy'; bgcls = 'sig-buy-bg';
+    verdict = 'Segnali leggermente positivi, ma senza conferme forti. Monitorare.';
+  } else if (score <= -3) {
+    label = '▼ NEGATIVO'; cls = 'sig-sell'; bgcls = 'sig-sell-bg';
+    verdict = 'Contesto sfavorevole. Più segnali negativi convergono: prudenza elevata.';
+  } else if (score <= -1) {
+    label = '◆ NEUTRO−'; cls = 'sig-sell'; bgcls = 'sig-sell-bg';
+    verdict = 'Segnali leggermente negativi. Il contesto non è ottimale.';
+  } else {
+    label = '● NEUTRO'; cls = 'sig-hold'; bgcls = 'sig-hold-bg';
+    verdict = 'Segnali misti. Nessuna direzione chiara al momento.';
+  }
+
+  return { label, cls, bgcls, text: verdict + ' Fattori: ' + reasons.slice(0,3).join(', ') + '.' };
+}
+
+function computePositionSignal(position, currentPrice, fgVal, btcDom) {
+  const coin = allCoins.find(c => c.id === position.coinId);
+  const baseSignal = computeSignal(coin, fgVal, btcDom);
+  const pnlPct = ((currentPrice - position.buyPrice) / position.buyPrice) * 100;
+
+  let extraText = '';
+  if (pnlPct > 50) extraText = ' Sei in forte profitto (+' + pnlPct.toFixed(1) + '%): valuta se prendere parte dei guadagni.';
+  else if (pnlPct > 20) extraText = ' Sei in profitto significativo (+' + pnlPct.toFixed(1) + '%): posizione solida.';
+  else if (pnlPct < -30) extraText = ' Sei in perdita significativa (' + pnlPct.toFixed(1) + '%): valuta attentamente la strategia.';
+  else if (pnlPct < -10) extraText = ' Sei in perdita (' + pnlPct.toFixed(1) + '%): monitora i livelli chiave.';
+  else extraText = ' P&L attuale: ' + (pnlPct >= 0 ? '+' : '') + pnlPct.toFixed(1) + '%.';
+
+  return { ...baseSignal, text: baseSignal.text + extraText };
+}
+
+async function loadMarket() {
+  const icon = document.getElementById('refresh-icon');
+  icon.classList.add('spin');
+  try {
+    const [globalRes, coinsRes, fgRes] = await Promise.all([
+      fetch('https://api.coingecko.com/api/v3/global'),
+      fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d'),
+      fetch('https://api.alternative.me/fng/')
+    ]);
+    globalData = (await globalRes.json()).data;
+    allCoins = await coinsRes.json();
+    fearGreed = (await fgRes.json()).data[0];
+
+    renderFearGreed();
+    renderMacro();
+    renderCoins();
+
+    const now = new Date().toLocaleTimeString('it-IT', {hour:'2-digit',minute:'2-digit'});
+    document.getElementById('live-label').textContent = 'live · ' + now;
+    document.getElementById('update-time').textContent = 'aggiornato alle ' + now;
+    if (positions.length) renderPortfolio();
+  } catch(e) {
+    document.getElementById('fg-card').innerHTML = '<div style="color:var(--red);font-size:13px;">Errore caricamento dati. Riprova.</div>';
+  }
+  icon.classList.remove('spin');
+}
+
+function renderFearGreed() {
+  if (!fearGreed) return;
+  const val = parseInt(fearGreed.value);
+  const label = fearGreed.value_classification;
+  const color = val < 25 ? 'var(--red)' : val < 45 ? 'var(--amber)' : val < 55 ? 'var(--text2)' : val < 75 ? 'var(--green)' : 'var(--green)';
+  document.getElementById('fg-card').innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+      <div class="macro-label">Fear & Greed Index</div>
+      <div style="font-size:11px;color:${color};font-family:var(--mono);">${label}</div>
+    </div>
+    <div class="fg-val" style="color:${color};margin-bottom:10px;">${val}<span style="font-size:14px;color:var(--text3);"> /100</span></div>
+    <div class="fg-track"><div class="fg-thumb" style="left:${val}%;"></div></div>
+    <div class="fg-labels"><span>Paura estrema</span><span>Greed estremo</span></div>
+  `;
+}
+
+function renderMacro() {
+  if (!globalData) return;
+  const btcDom = globalData.market_cap_percentage.btc.toFixed(1);
+  const ethDom = globalData.market_cap_percentage.eth.toFixed(1);
+  const altDom = (100 - parseFloat(btcDom) - parseFloat(ethDom)).toFixed(1);
+  const mcapChg = globalData.market_cap_change_percentage_24h_usd;
+  document.getElementById('macro-strip').innerHTML = `
+    <div class="macro-card">
+      <div class="macro-label">Market Cap</div>
+      <div class="macro-value" style="font-size:16px;">${fmt(globalData.total_market_cap.usd)}</div>
+      <div class="macro-sub ${mcapChg >= 0 ? 'positive' : 'negative'}">${mcapChg >= 0 ? '↑' : '↓'} ${Math.abs(mcapChg).toFixed(2)}% 24h</div>
+    </div>
+    <div class="macro-card">
+      <div class="macro-label">Volume 24h</div>
+      <div class="macro-value" style="font-size:16px;">${fmt(globalData.total_volume.usd)}</div>
+      <div class="macro-sub neutral-color">${globalData.active_cryptocurrencies?.toLocaleString()} asset</div>
+    </div>
+    <div class="macro-card" style="grid-column:1/-1;">
+      <div class="macro-label">Dominanza</div>
+      <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:6px;">
+        <span style="color:#f7931a;font-family:var(--mono);">BTC ${btcDom}%</span>
+        <span style="color:#627eea;font-family:var(--mono);">ETH ${ethDom}%</span>
+        <span style="color:var(--text3);font-family:var(--mono);">ALT ${altDom}%</span>
+      </div>
+      <div class="dom-bar">
+        <div class="dom-seg" style="width:${btcDom}%;background:#f7931a;"></div>
+        <div class="dom-seg" style="width:${ethDom}%;background:#627eea;"></div>
+        <div class="dom-seg" style="flex:1;background:var(--bg4);"></div>
+      </div>
+    </div>
+  `;
+}
+
+function renderCoins() {
+  if (!allCoins.length) return;
+  const fgVal = fearGreed ? parseInt(fearGreed.value) : 50;
+  const btcDom = globalData ? globalData.market_cap_percentage.btc : 50;
+
+  const sorted = [...allCoins].sort((a,b) => Math.abs(b.price_change_percentage_24h||0) - Math.abs(a.price_change_percentage_24h||0));
+  const list = showAll ? allCoins : sorted.slice(0, 8);
+
+  document.getElementById('coin-list').innerHTML = list.map(c => {
+    const chg = c.price_change_percentage_24h || 0;
+    const sig = computeSignal(c, fgVal, btcDom);
+    return `
+      <div class="coin-row">
+        <div class="coin-rank">#${c.market_cap_rank}</div>
+        <div class="coin-info">
+          <div class="coin-name">${c.name}</div>
+          <div class="coin-symbol">${c.symbol.toUpperCase()}</div>
+        </div>
+        <div class="coin-right">
+          <div class="coin-price">${fmt(c.current_price)}</div>
+          <div class="coin-chg ${chg >= 0 ? 'positive' : 'negative'}">${chg >= 0 ? '+' : ''}${chg.toFixed(2)}%</div>
+          <span class="signal-pill ${sig.cls}">${sig.label}</span>
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderPortfolio() {
+  if (!allCoins.length) { setTimeout(renderPortfolio, 500); return; }
+  const fgVal = fearGreed ? parseInt(fearGreed.value) : 50;
+  const btcDom = globalData ? globalData.market_cap_percentage.btc : 50;
+
+  let totalValue = 0;
+  let totalCost = 0;
+
+  const cards = positions.map((pos, idx) => {
+    const coin = allCoins.find(c => c.id === pos.coinId);
+    const currentPrice = coin ? coin.current_price : pos.buyPrice;
+    const value = currentPrice * pos.qty;
+    const cost = pos.buyPrice * pos.qty;
+    const pnl = value - cost;
+    const pnlPct = ((currentPrice - pos.buyPrice) / pos.buyPrice) * 100;
+    totalValue += value;
+    totalCost += cost;
+    const sig = computePositionSignal(pos, currentPrice, fgVal, btcDom);
+    return `
+      <div class="position-card">
+        <div class="pos-header">
+          <div>
+            <div class="pos-name">${pos.coinName}</div>
+            <div class="pos-symbol">${pos.coinSymbol} · ${pos.qty} unità</div>
+          </div>
+          <button class="pos-delete" onclick="deletePosition(${idx})">✕</button>
+        </div>
+        <div class="pos-metrics">
+          <div class="pos-metric">
+            <div class="pos-metric-label">Attuale</div>
+            <div class="pos-metric-value">${fmt(currentPrice)}</div>
+          </div>
+          <div class="pos-metric">
+            <div class="pos-metric-label">Valore</div>
+            <div class="pos-metric-value">${fmt(value)}</div>
+          </div>
+          <div class="pos-metric">
+            <div class="pos-metric-label">P&L</div>
+            <div class="pos-metric-value ${pnl >= 0 ? 'positive' : 'negative'}">${pnl >= 0 ? '+' : ''}${fmt(pnl).replace('$','$')}</div>
+          </div>
+        </div>
+        <div class="pos-signal ${sig.bgcls}">
+          <div class="pos-signal-title ${sig.cls}">${sig.label}</div>
+          <div class="pos-signal-text" style="color:var(--text2);">${sig.text}</div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  const totalPnl = totalValue - totalCost;
+  const totalPnlPct = totalCost > 0 ? ((totalValue - totalCost) / totalCost) * 100 : 0;
+
+  document.getElementById('port-total').textContent = '$' + totalValue.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+  document.getElementById('port-pnl').innerHTML = positions.length ? `<span class="${totalPnl >= 0 ? 'positive' : 'negative'}">${totalPnl >= 0 ? '+' : ''}$${Math.abs(totalPnl).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} (${totalPnlPct >= 0 ? '+' : ''}${totalPnlPct.toFixed(2)}%)</span>` : '';
+  document.getElementById('positions-list').innerHTML = positions.length ? cards : '<div class="empty-state"><div class="empty-icon">📭</div>Nessuna posizione ancora.<br>Aggiungi i tuoi asset per monitorarli.</div>';
+}
+
+function deletePosition(idx) {
+  positions.splice(idx, 1);
+  localStorage.setItem('cryptoagent_positions', JSON.stringify(positions));
+  renderPortfolio();
+}
+
+let searchTimeout;
+function searchToken() {
+  const q = document.getElementById('token-search').value.toLowerCase().trim();
+  clearTimeout(searchTimeout);
+  if (!q) { document.getElementById('search-results').style.display = 'none'; return; }
+  searchTimeout = setTimeout(() => {
+    const results = allCoins.filter(c => c.name.toLowerCase().includes(q) || c.symbol.toLowerCase().includes(q)).slice(0, 6);
+    const el = document.getElementById('search-results');
+    if (!results.length) { el.style.display = 'none'; return; }
+    el.style.display = 'block';
+    el.innerHTML = results.map(c => `
+      <div class="search-item" onclick="selectCoin('${c.id}','${c.name}','${c.symbol.toUpperCase()}',${c.current_price})">
+        <span>${c.name} <span class="search-item-symbol">${c.symbol.toUpperCase()}</span></span>
+        <span style="color:var(--text2);font-family:var(--mono);font-size:12px;">${fmt(c.current_price)}</span>
+      </div>
+    `).join('');
+  }, 200);
+}
+
+function selectCoin(id, name, symbol, price) {
+  selectedCoin = {id, name, symbol, price};
+  document.getElementById('token-search').value = name + ' (' + symbol + ')';
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('buy-price-input').placeholder = price.toLocaleString('en-US', {maximumFractionDigits:2});
+}
+
+function openAddModal() {
+  selectedCoin = null;
+  document.getElementById('token-search').value = '';
+  document.getElementById('qty-input').value = '';
+  document.getElementById('buy-price-input').value = '';
+  document.getElementById('search-results').style.display = 'none';
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+function closeModalOutside(e) { if (e.target.id === 'modal') closeModal(); }
+
+function savePosition() {
+  if (!selectedCoin) { alert('Seleziona un token dalla ricerca'); return; }
+  const qty = parseFloat(document.getElementById('qty-input').value);
+  const buyPrice = parseFloat(document.getElementById('buy-price-input').value);
+  if (!qty || qty <= 0) { alert('Inserisci una quantità valida'); return; }
+  if (!buyPrice || buyPrice <= 0) { alert('Inserisci un prezzo di acquisto valido'); return; }
+  positions.push({ coinId: selectedCoin.id, coinName: selectedCoin.name, coinSymbol: selectedCoin.symbol, qty, buyPrice });
+  localStorage.setItem('cryptoagent_positions', JSON.stringify(positions));
+  closeModal();
+  renderPortfolio();
+}
+
+loadMarket();
+</script>
+</body>
+</html>
