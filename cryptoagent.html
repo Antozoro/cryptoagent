@@ -4,7 +4,8 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ZoronoAnto Crypto</title>
-<link rel="apple-touch-icon" href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=="/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1610'/><text y='72' x='50' text-anchor='middle' font-size='65'>⚔️</text></svg>"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1610'/><text y='72' x='50' text-anchor='middle' font-size='65'>⚔️</text></svg>"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="ZoronoAnto"/>
@@ -182,7 +183,7 @@ body::after{content:'';position:fixed;inset:0;background-image:repeating-linear-
 <div class="app">
   <div class="topbar">
     <div class="logo">&#x2694;&#xFE0F; ZoronoAnto<span> Crypto</span></div>
-    <div class="live-badge" id="live-label">caricamento...</div>
+    <div style="display:flex;align-items:center;gap:8px;"><span id="sync-indicator" style="font-size:10px;color:var(--text3);font-family:var(--mono);" title="Sync cloud"></span><div class="live-badge" id="live-label">caricamento...</div></div>
   </div>
 
   <!-- MARKET -->
@@ -347,6 +348,57 @@ const TG_TOKEN = '8375937027:AAFUM8KeL0rd05IteyvAtPrJQu7Mapa4Hek';
 const TG_CHAT = '253145198';
 const TG_URL = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`;
 
+// CLOUD SYNC
+const BIN_ID = '6a01d25dc0954111d8092136';
+const BIN_KEY = '$2a$10$PwX2t3Nvv6ee6F9sbrZBLeibyPt4DJiepKu6CmkPJylZ7sfJ.2k7u';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+let syncTimeout = null;
+let lastSyncHash = '';
+
+async function cloudLoad() {
+  try {
+    const r = await fetch(BIN_URL+'/latest', {
+      headers: {'X-Master-Key': BIN_KEY}
+    });
+    const d = await r.json();
+    const data = d.record;
+    if (data.positions) { positions = data.positions; }
+    if (data.wishlist) { wishlist = data.wishlist; }
+    console.log('Cloud sync: loaded', positions.length, 'positions,', wishlist.length, 'wishlist items');
+  } catch(e) {
+    console.log('Cloud load failed, using localStorage:', e);
+    positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
+    wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
+  }
+}
+
+async function cloudSave() {
+  const data = { positions, wishlist };
+  const hash = JSON.stringify(data);
+  if (hash === lastSyncHash) return;
+  lastSyncHash = hash;
+  // Also save to localStorage as backup
+  localStorage.setItem('ca_positions', JSON.stringify(positions));
+  localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
+  try {
+    await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json', 'X-Master-Key': BIN_KEY},
+      body: JSON.stringify(data)
+    });
+    const si = document.getElementById('sync-indicator');
+    if(si) { si.textContent='☁️ sync'; setTimeout(()=>{si.textContent='';},2000); }
+    console.log('Cloud sync: saved');
+  } catch(e) {
+    console.log('Cloud save failed:', e);
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(cloudSave, 1500);
+}
+
 function checkAuth(){if(localStorage.getItem('ca_auth')===APP_PASS)return;document.getElementById('lockscreen').style.display='flex';document.querySelector('.app').style.display='none';document.querySelector('.bottom-nav').style.display='none';}
 function tryLogin(){const v=document.getElementById('pass-input').value;if(v===APP_PASS){localStorage.setItem('ca_auth',APP_PASS);document.getElementById('lockscreen').style.display='none';document.querySelector('.app').style.display='block';document.querySelector('.bottom-nav').style.display='flex';loadAll();}else{document.getElementById('pass-error').style.display='block';document.getElementById('pass-input').value='';}}
 
@@ -394,7 +446,7 @@ function savePos(){if(!selectedCoin){alert('Cerca e seleziona una crypto dall\'e
 
 function smartThreshold(coinId){const coin=coins.find(c=>c.id===coinId);const rank=coin?coin.market_cap_rank:50;if(rank<=10)return 7;if(rank<=30)return 10;return 15;}
 function quickAddWish(id,name,sym,price){if(wishlist.some(w=>w.coinId===id)){alert(name+' e gia nella wishlist');return;}const t=smartThreshold(id);const coin=coins.find(c=>c.id===id);const rank=coin?coin.market_cap_rank:50;const targetPrice=(price*(1-t/100)).toFixed(4);wishlist.push({coinId:id,coinName:name,coinSymbol:sym,addedPrice:price,threshold:t,addedAt:new Date().toLocaleDateString('it-IT')});localStorage.setItem('ca_wishlist',JSON.stringify(wishlist));renderOpportunities();alert('⭐ '+name+' aggiunta alla wishlist!\n\nTi avviso quando scende del '+t+'%\nPrezzo target: $'+targetPrice+'\n\n(Soglia calcolata in base alla volatilita del #'+rank+')');}
-function resetWishlist(){wishlist=[];localStorage.removeItem('ca_wishlist');localStorage.removeItem('ca_lastalerts');renderWishlist();renderOpportunities();alert('Wishlist resettata!');}
+function resetWishlist(){wishlist=[];scheduleSave();localStorage.removeItem('ca_lastalerts');renderWishlist();renderOpportunities();alert('Wishlist resettata!');}
 function doWSearch(){const q=document.getElementById('wtsearch').value.toLowerCase().trim();clearTimeout(wSearchTimer);const drop=document.getElementById('wsdrop');if(!q){drop.style.display='none';return;}wSearchTimer=setTimeout(()=>{const res=coins.filter(c=>c.name.toLowerCase().includes(q)||c.symbol.toLowerCase().includes(q)).slice(0,6);if(!res.length){drop.style.display='none';return;}drop.style.display='block';drop.innerHTML=res.map(c=>`<div class="search-item" onclick="pickWCoin('${c.id}','${c.name}','${c.symbol.toUpperCase()}',${c.current_price})"><span>${c.name} <span class="search-item-sym">${c.symbol.toUpperCase()}</span></span><span style="color:var(--text2);font-family:var(--mono);font-size:12px;">${fmt(c.current_price)}</span></div>`).join('');},180);}
 function pickWCoin(id,name,sym,price){wSelectedCoin={id,name,sym,price};document.getElementById('wtsearch').value=name+' ('+sym+')';document.getElementById('wsdrop').style.display='none';}
 function openWishModal(){wSelectedCoin=null;document.getElementById('wtsearch').value='';document.getElementById('wsdrop').style.display='none';document.getElementById('wmodal').classList.add('open');}
@@ -427,9 +479,11 @@ function toggleGlossary(i){const ans=document.getElementById('gans-'+i);const ar
 async function loadAll(){const icon=document.getElementById('ricon');icon.classList.add('spin');try{const [gRes,cRes,fgRes]=await Promise.all([fetch('https://api.coingecko.com/api/v3/global'),fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d'),fetch('https://api.alternative.me/fng/')]);globalData=(await gRes.json()).data;coins=await cRes.json();fg=(await fgRes.json()).data[0];renderMarket();const active=document.querySelector('.panel.active');if(active&&active.id==='panel-opportunities')renderOpportunities();if(active&&active.id==='panel-portfolio')renderPortfolio();if(active&&active.id==='panel-wishlist')renderWishlist();if(active&&active.id==='panel-scopri'){runSimulator();}checkAlerts();}catch(e){document.getElementById('situation-card').innerHTML='<div class="situation-card bad"><div class="sit-emoji">❌</div><div class="sit-title">Errore di connessione</div><div class="sit-desc">Non riesco a caricare i dati. Controlla la connessione e riprova.</div></div>';}icon.classList.remove('spin');}
 
 renderGlossary();
-loadAll();
-setInterval(loadAll,5*60*1000);
 checkAuth();
+cloudLoad().then(() => {
+  loadAll();
+  setInterval(loadAll, 5*60*1000);
+});
 </script>
 </body>
 </html>
