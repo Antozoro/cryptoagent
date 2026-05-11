@@ -6,7 +6,26 @@ export default async function handler(req, res) {
 
   const { endpoint } = req.query;
   const GH_TOKEN = process.env.GH_TOKEN;
+  const CLAUDE_KEY = process.env.CLAUDE_KEY;
+  const TG_TOKEN = process.env.TG_TOKEN;
+  const TG_CHAT = process.env.TG_CHAT;
   const GH_API = 'https://api.github.com/repos/Antozoro/cryptoagent/contents/data.json';
+
+  // TELEGRAM SEND
+  if (endpoint === 'tg-send' && req.method === 'POST') {
+    try {
+      const { text } = req.body;
+      const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ chat_id: TG_CHAT, text, parse_mode: 'HTML' })
+      });
+      const d = await r.json();
+      return res.status(200).json({ ok: d.ok });
+    } catch(e) {
+      return res.status(500).json({ ok: false, error: e.message });
+    }
+  }
 
   // SYNC LOAD
   if (endpoint === 'sync-load') {
@@ -15,7 +34,7 @@ export default async function handler(req, res) {
         headers: { 'Authorization': 'token ' + GH_TOKEN, 'Accept': 'application/vnd.github.v3+json' }
       });
       const d = await r.json();
-      if (!d.content) return res.status(404).json({ error: 'No data found', raw: d });
+      if (!d.content) return res.status(404).json({ error: 'No data found' });
       const data = JSON.parse(Buffer.from(d.content.replace(/\n/g,''), 'base64').toString());
       return res.status(200).json(data);
     } catch(e) {
@@ -46,6 +65,48 @@ export default async function handler(req, res) {
       return res.status(500).json({ error: putD.message || 'Save failed' });
     } catch(e) {
       return res.status(500).json({ error: e.message });
+    }
+  }
+
+  // CHAT AI
+  if (endpoint === 'chat' && req.method === 'POST') {
+    try {
+      const { messages, marketContext, portfolioContext } = req.body;
+      const systemPrompt = `Sei un assistente esperto di criptovalute integrato nell'app ZoronoAnto Crypto. Il tuo compito è aiutare Antonio, un neofita, a capire il mercato crypto e prendere decisioni informate.
+
+DATI DI MERCATO LIVE:
+${marketContext}
+
+PORTAFOGLIO DI ANTONIO:
+${portfolioContext}
+
+ISTRUZIONI:
+- Rispondi SEMPRE in italiano, in modo semplice e diretto
+- Usa i dati live per contestualizzare ogni risposta
+- Per domande su cosa comprare/vendere: dai un'opinione chiara basata sui dati, specificando che non sei un consulente finanziario
+- Sii conciso: risposte brevi, usa bullet point quando utile
+- Spiega i concetti con esempi pratici sui dati reali
+- Tono: amichevole, come un amico esperto`;
+
+      const r = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-api-key': CLAUDE_KEY,
+          'anthropic-version': '2023-06-01'
+        },
+        body: JSON.stringify({
+          model: 'claude-haiku-4-5-20251001',
+          max_tokens: 1024,
+          system: systemPrompt,
+          messages
+        })
+      });
+      const d = await r.json();
+      if (d.content) return res.status(200).json({ ok: true, reply: d.content[0].text });
+      return res.status(500).json({ ok: false, error: d.error?.message || 'Claude error' });
+    } catch(e) {
+      return res.status(500).json({ ok: false, error: e.message });
     }
   }
 
