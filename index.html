@@ -361,16 +361,24 @@ async function tgSyncSave() {
   lastSyncHash = hash;
   localStorage.setItem('ca_positions', JSON.stringify(positions));
   localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
+  const si = document.getElementById('sync-indicator');
   try {
     const payload = SYNC_TAG + JSON.stringify(data);
-    await fetch(TG_URL, {
+    if(si) si.textContent='⏳ sync...';
+    const r = await fetch(TG_URL, {
       method: 'POST',
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify({chat_id: TG_CHAT, text: payload})
     });
-    const si = document.getElementById('sync-indicator');
-    if(si) { si.textContent='☁️ sync'; setTimeout(()=>{si.textContent='';},2000); }
-  } catch(e) { console.log('TG sync save failed:', e); }
+    const d = await r.json();
+    if(d.ok) {
+      if(si) { si.textContent='☁️ sync OK'; setTimeout(()=>{si.textContent='';},3000); }
+    } else {
+      if(si) { si.textContent='❌ sync error: '+d.description; setTimeout(()=>{si.textContent='';},5000); }
+    }
+  } catch(e) {
+    if(si) { si.textContent='❌ '+e.message; setTimeout(()=>{si.textContent='';},5000); }
+  }
 }
 
 async function tgSyncLoad() {
