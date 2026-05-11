@@ -532,11 +532,17 @@ function addChatMsg(role, text) {
   if (!container) return;
   const now=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
   const isUser=role==='user';
-  const div=document.createElement('div');
-  div.style.cssText='max-width:88%;align-self:'+(isUser?'flex-end':'flex-start')+';';
-  div.innerHTML='<div style="padding:10px 14px;border-radius:14px;'+(isUser?'border-bottom-right-radius':'border-bottom-left-radius')+':4px;font-size:13px;line-height:1.6;background:'+(isUser?'rgba(57,255,20,0.15)':'var(--bg3)')+';color:'+(isUser?'#f0f0f5':'rgba(255,255,255,0.85)')+';border:0.5px solid '+(isUser?'rgba(57,255,20,0.2)':'var(--border)')+';">'+text.replace(/
-/g,'<br>')+'</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;padding:0 4px;'+(isUser?'text-align:right;':'')+' ">'+now+'</div>';
-  container.appendChild(div);
+  const wrap=document.createElement('div');
+  wrap.style.cssText='max-width:88%;display:flex;flex-direction:column;align-self:'+(isUser?'flex-end':'flex-start')+';';
+  const bubble=document.createElement('div');
+  bubble.style.cssText='padding:10px 14px;border-radius:14px;'+(isUser?'border-bottom-right-radius':'border-bottom-left-radius')+':4px;font-size:13px;line-height:1.6;background:'+(isUser?'rgba(57,255,20,0.15)':'var(--bg3)')+';color:'+(isUser?'#f0f0f5':'rgba(255,255,255,0.85)')+';border:0.5px solid '+(isUser?'rgba(57,255,20,0.2)':'var(--border)')+';';
+  bubble.innerHTML=text.split('\n').join('<br>');
+  const time=document.createElement('div');
+  time.style.cssText='font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;padding:0 4px;'+(isUser?'text-align:right;':'');
+  time.textContent=now;
+  wrap.appendChild(bubble);
+  wrap.appendChild(time);
+  container.appendChild(wrap);
   container.scrollTop=container.scrollHeight;
 }
 
@@ -557,7 +563,7 @@ function suggestMsg(text){const input=document.getElementById('chat-input');if(i
 
 async function sendChat() {
   const input=document.getElementById('chat-input');
-  const btn=document.getElementById('chat-send');
+  const btn=document.getElementById('chat-send-btn');
   if (!input||!btn) return;
   const text=input.value.trim();
   if (!text||btn.disabled) return;
