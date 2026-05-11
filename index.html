@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ZoronoAnto Crypto</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1610'/><text y='72' x='50' text-anchor='middle' font-size='65'>⚔️</text></svg>"/>
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1610'/><text y='72' x='50' text-anchor='middle' font-size='65'>⚔️</text></svg>"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="ZoronoAnto"/>
+<meta name="theme-color" content="#040608"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+<style>
+:root{--bg:#040608;--bg2:#080d0a;--bg3:#0d1610;--bg4:#121f14;--border:rgba(255,255,255,0.06);--border2:rgba(255,255,255,0.12);--text:#ededf5;--text2:#8888a8;--text3:#44445a;--accent:#39d353;--accent2:#57ff7a;--green:#39ff14;--green-bg:rgba(57,255,20,0.08);--green-border:rgba(57,255,20,0.25);--red:#f87171;--red-bg:rgba(248,113,113,0.1);--red-border:rgba(248,113,113,0.2);--amber:#fbbf24;--amber-bg:rgba(251,191,36,0.08);--amber-border:rgba(251,191,36,0.2);--blue:#60a5fa;--blue-bg:rgba(96,165,250,0.08);--blue-border:rgba(96,165,250,0.2);--mono:'Space Mono',monospace;--sans:'DM Sans',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);font-family:var(--sans);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased;}
+body::before{content:'';position:fixed;inset:0;background:radial-gradient(ellipse 80% 60% at 20% 0%,rgba(57,255,20,0.08) 0%,transparent 50%),radial-gradient(ellipse 60% 40% at 80% 100%,rgba(147,51,234,0.1) 0%,transparent 50%);pointer-events:none;z-index:0;}
+body::after{content:'';position:fixed;inset:0;background-image:repeating-linear-gradient(0deg,transparent,transparent 80px,rgba(57,255,20,0.015) 80px,rgba(57,255,20,0.015) 81px),repeating-linear-gradient(90deg,transparent,transparent 80px,rgba(57,255,20,0.015) 80px,rgba(57,255,20,0.015) 81px);pointer-events:none;z-index:0;}
+.app{position:relative;z-index:1;max-width:480px;margin:0 auto;padding:0 0 90px;}
+.topbar{padding:18px 18px 0;display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:var(--mono);font-size:14px;font-weight:700;letter-spacing:0.04em;text-shadow:0 0 12px rgba(57,255,20,0.4);}
+.logo span{color:var(--accent2);}
+.live-badge{font-size:10px;color:var(--text3);font-family:var(--mono);display:flex;align-items:center;gap:5px;}
+.live-badge::before{content:'';width:5px;height:5px;border-radius:50%;background:var(--green);box-shadow:0 0 10px var(--green),0 0 20px rgba(57,255,20,0.3);animation:blink 2s infinite;}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:0.2}}
+.panel{display:none;padding:14px 18px 0;}
+.panel.active{display:block;}
+.situation-card{border-radius:16px;padding:18px;margin-bottom:12px;border:0.5px solid;}
+.situation-card.good{background:var(--green-bg);border-color:var(--green-border);}
+.situation-card.bad{background:var(--red-bg);border-color:var(--red-border);}
+.situation-card.neutral{background:var(--bg3);border-color:var(--border2);}
+.situation-card.watch{background:var(--amber-bg);border-color:var(--amber-border);}
+.sit-emoji{font-size:28px;margin-bottom:8px;}
+.sit-title{font-size:17px;font-weight:600;margin-bottom:6px;text-shadow:0 0 20px rgba(57,255,20,0.2);}
+.sit-desc{font-size:13px;line-height:1.6;color:rgba(255,255,255,0.65);}
+.macro-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+.pill{background:var(--bg3);border:0.5px solid rgba(255,255,255,0.1);border-radius:999px;padding:5px 12px;font-size:12px;color:rgba(255,255,255,0.5);font-family:var(--mono);}
+.pill span{color:var(--text);font-weight:700;}
+.sec{margin-bottom:16px;}
+.sec-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.sec-title{font-size:12px;font-family:var(--mono);color:rgba(255,255,255,0.55);letter-spacing:0.1em;text-transform:uppercase;}
+.opp-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;}
+.opp-card.featured{border-color:rgba(57,255,20,0.3);background:rgba(57,255,20,0.06);box-shadow:0 0 12px rgba(57,255,20,0.08);}
+.opp-card.warning{border-color:rgba(248,113,113,0.3);background:rgba(248,113,113,0.06);}
+.opp-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:8px;}
+.opp-name{font-size:15px;font-weight:600;color:#f0f0f5;}
+.opp-sub{font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--mono);margin-top:1px;}
+.opp-price{font-size:14px;font-weight:500;font-family:var(--mono);color:#f0f0f5;}
+.opp-chg{font-size:12px;font-family:var(--mono);margin-top:1px;}
+.opp-verdict{font-size:12px;line-height:1.5;color:rgba(255,255,255,0.65);padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.08);}
+.verdict-badge{display:inline-block;font-size:10px;font-family:var(--mono);padding:3px 9px;border-radius:999px;margin-bottom:6px;}
+.vb-buy{background:rgba(57,255,20,0.15);color:#00ff44;border:0.5px solid rgba(57,255,20,0.4);text-shadow:0 0 8px rgba(57,255,20,0.6);}
+.vb-watch{background:rgba(251,191,36,0.12);color:#fcd34d;border:0.5px solid rgba(251,191,36,0.35);}
+.vb-avoid{background:rgba(248,113,113,0.12);color:#fca5a5;border:0.5px solid rgba(248,113,113,0.35);}
+.vb-hold{background:rgba(96,165,250,0.12);color:#93c5fd;border:0.5px solid rgba(96,165,250,0.35);}
+.port-hero{background:var(--bg3);border:0.5px solid var(--border);border-radius:16px;padding:20px;text-align:center;margin-bottom:12px;}
+.port-label{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:6px;}
+.port-total{font-size:34px;font-weight:700;font-family:var(--mono);}
+.port-pnl{font-size:13px;margin-top:5px;font-family:var(--mono);}
+.port-advice{font-size:13px;color:rgba(255,255,255,0.6);margin-top:10px;padding-top:10px;border-top:0.5px solid rgba(255,255,255,0.08);line-height:1.5;}
+.add-btn{width:100%;padding:12px;border-radius:12px;border:0.5px dashed var(--border2);background:transparent;color:var(--accent2);font-family:var(--sans);font-size:14px;cursor:pointer;margin-bottom:14px;transition:all 0.2s;}
+.add-btn:hover{background:var(--bg3);}
+.pos-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;}
+.pos-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:10px;}
+.pos-name{font-size:15px;font-weight:600;}
+.pos-qty{font-size:11px;color:var(--text3);font-family:var(--mono);margin-top:2px;}
+.pos-del{background:none;border:none;color:var(--text3);cursor:pointer;font-size:18px;line-height:1;padding:0;}
+.pos-del:hover{color:var(--red);}
+.pos-nums{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+.pos-num{text-align:center;background:var(--bg4);border-radius:8px;padding:8px 4px;}
+.pos-num-label{font-size:10px;color:var(--text3);font-family:var(--mono);margin-bottom:3px;}
+.pos-num-val{font-size:13px;font-weight:500;font-family:var(--mono);}
+.pos-advice-box{border-radius:10px;padding:12px;border:0.5px solid;}
+.pos-advice-box.good{background:var(--green-bg);border-color:var(--green-border);}
+.pos-advice-box.neutral{background:var(--blue-bg);border-color:var(--blue-border);}
+.pos-advice-box.caution{background:var(--amber-bg);border-color:var(--amber-border);}
+.pos-advice-box.bad{background:var(--red-bg);border-color:var(--red-border);}
+.pos-advice-verdict{font-size:11px;font-family:var(--mono);letter-spacing:0.05em;margin-bottom:4px;}
+.pos-advice-text{font-size:12px;color:rgba(255,255,255,0.65);line-height:1.55;}
+.notif-card{background:var(--bg3);border:0.5px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:10px;}
+.notif-title{font-size:14px;font-weight:600;margin-bottom:4px;display:flex;align-items:center;gap:8px;}
+.notif-desc{font-size:12px;color:rgba(255,255,255,0.6);line-height:1.5;margin-bottom:12px;}
+.notif-status{display:flex;align-items:center;gap:6px;font-size:12px;font-family:var(--mono);}
+.dot-on{width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 6px var(--green);}
+.test-btn{width:100%;padding:10px;border-radius:10px;border:0.5px solid var(--green);background:transparent;color:var(--green);font-family:var(--sans);font-size:13px;cursor:pointer;margin-top:10px;transition:all 0.2s;}
+.test-btn:disabled{opacity:0.4;cursor:not-allowed;}
+.threshold-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:0.5px solid var(--border);}
+.threshold-row:last-child{border-bottom:none;}
+.th-label{font-size:12px;color:rgba(255,255,255,0.5);}
+.th-val{font-size:12px;font-family:var(--mono);color:var(--text);}
+.notif-log{background:var(--bg4);border-radius:10px;padding:12px;margin-top:10px;max-height:150px;overflow-y:auto;}
+.log-item{font-size:11px;font-family:var(--mono);color:var(--text2);padding:3px 0;border-bottom:0.5px solid var(--border);}
+.log-item:last-child{border-bottom:none;}
+.log-item.sent{color:var(--green);}
+.log-item.error{color:var(--red);}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.75);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--bg2);border:0.5px solid var(--border2);border-radius:20px 20px 0 0;padding:22px 18px 40px;width:100%;max-width:480px;}
+.modal-title{font-size:16px;font-weight:600;margin-bottom:18px;}
+.flabel{font-size:11px;font-family:var(--mono);color:var(--text3);letter-spacing:0.07em;text-transform:uppercase;margin-bottom:5px;display:block;}
+.fgroup{margin-bottom:13px;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.finput{width:100%;padding:11px 13px;border-radius:10px;border:0.5px solid var(--border2);background:var(--bg3);color:var(--text);font-family:var(--mono);font-size:13px;outline:none;}
+.finput:focus{border-color:var(--accent);}
+.search-drop{border-radius:10px;border:0.5px solid var(--border);background:var(--bg3);max-height:150px;overflow-y:auto;display:none;}
+.search-item{padding:9px 13px;cursor:pointer;font-size:13px;border-bottom:0.5px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.search-item:last-child{border-bottom:none;}
+.search-item:hover{background:var(--bg4);}
+.search-item-sym{font-family:var(--mono);color:var(--text3);font-size:11px;}
+.modal-btns{display:flex;gap:8px;margin-top:18px;}
+.mbtn-cancel{flex:1;padding:12px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:var(--text2);font-family:var(--sans);font-size:14px;cursor:pointer;}
+.mbtn-save{flex:2;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#39d353,#57ff7a);color:#040608;font-family:var(--sans);font-size:14px;font-weight:600;cursor:pointer;}
+.bottom-nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:480px;background:rgba(9,9,15,0.96);border-top:0.5px solid var(--border);backdrop-filter:blur(20px);display:flex;padding:10px 18px 24px;gap:4px;z-index:100;}
+.nav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px;border-radius:10px;border:none;background:transparent;color:var(--text3);cursor:pointer;font-size:10px;font-family:var(--sans);transition:all 0.15s;}
+.nav-btn.active{color:var(--accent2);background:rgba(57,255,20,0.1);}
+.nav-icon{font-size:20px;}
+.positive{color:#39ff14 !important;}
+.negative{color:var(--red);}
+.skel{background:var(--bg4);border-radius:6px;animation:sk 1.5s infinite;}
+@keyframes sk{0%,100%{opacity:0.3}50%{opacity:0.8}}
+.empty{text-align:center;padding:36px 16px;color:var(--text3);font-size:13px;line-height:1.7;}
+.refresh-row{display:flex;justify-content:flex-end;margin-bottom:10px;}
+.rbtn{background:none;border:0.5px solid var(--border);border-radius:8px;color:var(--text3);padding:5px 10px;font-size:11px;font-family:var(--mono);cursor:pointer;display:flex;align-items:center;gap:5px;}
+.rbtn:hover{border-color:var(--border2);color:var(--text2);}
+.spin{animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.uptime{text-align:center;font-size:10px;color:var(--text3);font-family:var(--mono);padding:6px 0 2px;}
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:rgba(57,255,20,0.3);border-radius:999px;}
+/* WISHLIST */
+.wish-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px;}
+/* SCOPRI */
+.guide-step{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;display:none;}
+.guide-step.active{display:block;}
+.guide-question{font-size:15px;font-weight:600;color:#f0f0f5;margin-bottom:14px;line-height:1.4;}
+.guide-options{display:flex;flex-direction:column;gap:8px;}
+.guide-option{padding:12px 14px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:rgba(255,255,255,0.7);font-family:var(--sans);font-size:13px;cursor:pointer;text-align:left;transition:all 0.15s;}
+.guide-option:hover{background:var(--bg4);color:#f0f0f5;border-color:rgba(57,255,20,0.3);}
+.guide-result{background:var(--green-bg);border:0.5px solid var(--green-border);border-radius:14px;padding:16px;display:none;margin-bottom:10px;}
+.guide-result.show{display:block;}
+.guide-result-title{font-size:15px;font-weight:600;color:#57ff7a;margin-bottom:10px;}
+.guide-result-text{font-size:13px;color:rgba(255,255,255,0.65);line-height:1.7;}
+.guide-restart{margin-top:12px;padding:10px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:rgba(255,255,255,0.5);font-family:var(--sans);font-size:13px;cursor:pointer;width:100%;}
+.simulator-card{background:var(--bg3);border:0.5px solid var(--border);border-radius:14px;padding:16px;margin-bottom:10px;}
+.sim-input-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.sim-label{font-size:12px;color:rgba(255,255,255,0.5);font-family:var(--mono);min-width:70px;}
+.sim-result{background:var(--bg4);border-radius:10px;padding:12px;margin-top:10px;}
+.sim-result-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;}
+.sim-result-name{font-size:13px;color:rgba(255,255,255,0.6);}
+.sim-result-val{font-size:13px;font-family:var(--mono);font-weight:500;}
+.glossary-item{background:var(--bg3);border:0.5px solid var(--border);border-radius:12px;margin-bottom:8px;overflow:hidden;}
+.glossary-q{padding:14px;display:flex;align-items:center;justify-content:space-between;cursor:pointer;font-size:14px;font-weight:500;color:#f0f0f5;}
+.glossary-q:hover{background:var(--bg4);}
+.glossary-a{padding:0 14px;font-size:13px;color:rgba(255,255,255,0.6);line-height:1.6;max-height:0;overflow:hidden;transition:max-height 0.3s ease,padding 0.3s;}
+.glossary-a.open{max-height:300px;padding:0 14px 14px;}
+.detail-overlay{position:fixed;inset:0;background:var(--bg);z-index:300;overflow-y:auto;display:none;}
+.detail-overlay.open{display:block;}
+.detail-header{padding:16px 18px;display:flex;align-items:center;gap:12px;border-bottom:0.5px solid var(--border);position:sticky;top:0;background:var(--bg);z-index:10;}
+.detail-back{background:none;border:0.5px solid var(--border2);border-radius:8px;color:var(--text2);padding:6px 12px;font-size:13px;cursor:pointer;font-family:var(--sans);}
+.detail-content{padding:16px 18px 100px;}
+.detail-name{font-size:22px;font-weight:700;color:#f0f0f5;}
+.detail-sym{font-size:12px;color:rgba(255,255,255,0.4);font-family:var(--mono);}
+.detail-price{font-size:30px;font-weight:700;font-family:var(--mono);color:#f0f0f5;margin:12px 0 4px;}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:14px 0;}
+.detail-stat{background:var(--bg3);border-radius:10px;padding:12px;border:0.5px solid var(--border);}
+.detail-stat-label{font-size:10px;color:rgba(255,255,255,0.4);font-family:var(--mono);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:4px;}
+.detail-stat-val{font-size:15px;font-weight:500;font-family:var(--mono);color:#f0f0f5;}
+.detail-explain{background:var(--bg3);border-radius:12px;padding:14px;border:0.5px solid var(--border);font-size:13px;color:rgba(255,255,255,0.65);line-height:1.7;}
+</style>
+</head>
+<body>
+
+<div id="lockscreen" style="display:none;position:fixed;inset:0;background:#040608;z-index:999;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="font-family:'Space Mono',monospace;font-size:18px;font-weight:700;margin-bottom:6px;">&#x2694;&#xFE0F; ZoronoAnto<span style="color:#57ff7a;"> Crypto</span></div>
+  <div style="font-size:12px;color:#44445a;font-family:'Space Mono',monospace;margin-bottom:32px;">accesso privato</div>
+  <input id="pass-input" type="password" placeholder="password" onkeydown="if(event.key==='Enter')tryLogin()" style="width:100%;max-width:300px;padding:14px 16px;border-radius:12px;border:0.5px solid rgba(255,255,255,0.12);background:#16161f;color:#ededf5;font-family:'Space Mono',monospace;font-size:15px;outline:none;text-align:center;margin-bottom:10px;"/>
+  <div id="pass-error" style="display:none;font-size:12px;color:#f87171;font-family:'Space Mono',monospace;margin-bottom:10px;">password errata</div>
+  <button onclick="tryLogin()" style="width:100%;max-width:300px;padding:13px;border-radius:12px;border:none;background:#39d353;color:#040608;font-family:'DM Sans',sans-serif;font-size:15px;font-weight:600;cursor:pointer;">entra</button>
+</div>
+
+<div class="app">
+  <div class="topbar">
+    <div class="logo">&#x2694;&#xFE0F; ZoronoAnto<span> Crypto</span></div>
+    <div style="display:flex;align-items:center;gap:8px;"><span id="sync-indicator" style="font-size:10px;color:var(--text3);font-family:var(--mono);" title="Sync cloud"></span><div class="live-badge" id="live-label">caricamento...</div></div>
+  </div>
+
+  <!-- MARKET -->
+  <div class="panel active" id="panel-market">
+    <div class="refresh-row"><button class="rbtn" onclick="loadAll()"><span id="ricon" style="display:inline-block;">&#x21BB;</span> aggiorna</button></div>
+    <div id="situation-card"><div class="situation-card neutral"><div class="sit-emoji">&#x23F3;</div><div class="sit-title">Caricamento dati...</div><div class="sit-desc">Sto leggendo il mercato, dammi un secondo.</div></div></div>
+    <div class="macro-pills" id="macro-pills"></div>
+    <div class="sec"><div class="sec-head"><span class="sec-title">Top movers &mdash; tocca per dettaglio</span></div>
+    <div id="market-summary" style="font-size:13px;color:rgba(255,255,255,0.65);line-height:1.7;background:var(--bg3);border-radius:12px;padding:14px;border:0.5px solid var(--border);"></div></div>
+    <div class="uptime" id="uptime"></div>
+  </div>
+
+  <!-- OPPORTUNITIES -->
+  <div class="panel" id="panel-opportunities">
+    <div class="refresh-row"><button class="rbtn" onclick="loadAll()"><span style="display:inline-block;">&#x21BB;</span> aggiorna</button></div>
+    <div id="dip-section"></div>
+    <div class="sec"><div class="sec-head"><span class="sec-title">&#x2705; Segnali positivi</span></div><div id="buy-list"></div></div>
+    <div class="sec"><div class="sec-head"><span class="sec-title">&#x1F440; Da tenere d&apos;occhio</span></div><div id="watch-list"></div></div>
+    <div class="sec"><div class="sec-head"><span class="sec-title">&#x1F525; Meglio evitare ora</span></div><div id="avoid-list"></div></div>
+  </div>
+
+  <!-- PORTFOLIO -->
+  <div class="panel" id="panel-portfolio">
+    <div class="port-hero"><div class="port-label">Il mio portafoglio</div><div class="port-total" id="port-total">$0.00</div><div class="port-pnl" id="port-pnl"></div><div class="port-advice" id="port-advice">Aggiungi le crypto che hai comprato per monitorarle.</div></div>
+    <button class="add-btn" onclick="openModal()">+ aggiungi una crypto che ho comprato</button>
+    <div id="positions"></div>
+  </div>
+
+  <!-- ALERTS -->
+  <div class="panel" id="panel-alerts">
+    <div style="padding-top:4px;">
+      <div class="notif-card">
+        <div class="notif-title">&#x1F916; Bot Telegram attivo</div>
+        <div class="notif-desc">Il tuo bot @zoronoanto_crypto_bot ti manda notifiche automatiche per ZoronoAnto Crypto quando succede qualcosa di importante sul tuo portafoglio.</div>
+        <div class="notif-status"><div class="dot-on"></div><span>Connesso</span></div>
+        <button class="test-btn" id="test-btn" onclick="sendTestMessage()">&#x1F4E8; Invia messaggio di test</button>
+      </div>
+      <div class="notif-card">
+        <div class="notif-title">&#x2699;&#xFE0F; Quando ricevi notifiche</div>
+        <div class="notif-desc">Controllo automatico ogni 5 minuti. Ti avviso quando:</div>
+        <div class="threshold-row"><span class="th-label">&#x1F4C9; 💼 PORTAFOGLIO scende del</span><span class="th-val">-10% dal tuo prezzo</span></div>
+        <div class="threshold-row"><span class="th-label">&#x1F4C8; 💼 PORTAFOGLIO sale del</span><span class="th-val">+20% dal tuo prezzo</span></div>
+        <div class="threshold-row"><span class="th-label">&#x1F631; 📊 MERCATO Fear &amp; Greed sotto</span><span class="th-val">25 (paura estrema)</span></div>
+        <div class="threshold-row"><span class="th-label">&#x1F4A1; 🚀 OCCASIONI crypto in rimbalzo</span><span class="th-val">top 30 -10% settimana</span></div>
+        <div class="threshold-row"><span class="th-label">&#x1F3AF; ⭐ WISHLIST prezzo target</span><span class="th-val">raggiunto o vicino</span></div>
+      </div>
+      <div class="notif-card">
+        <div class="notif-title">&#x1F4CB; Ultime notifiche inviate</div>
+        <div class="notif-log" id="notif-log"><div class="log-item">Nessuna notifica ancora</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- WISHLIST -->
+  <div class="panel" id="panel-wishlist">
+    <div style="padding-top:4px;">
+      <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.6;background:var(--bg3);border-radius:12px;padding:14px;border:0.5px solid var(--border);margin-bottom:14px;">&#x2B50; Aggiungi qui le crypto che vuoi comprare. Ti avviso su Telegram quando scendono al prezzo giusto per entrare.</div>
+      <button class="add-btn" onclick="openWishModal()">+ aggiungi crypto alla wishlist</button>
+      <button onclick="resetWishlist()" style="width:100%;padding:8px;border-radius:10px;border:0.5px solid var(--red-border);background:transparent;color:var(--red);font-size:12px;font-family:var(--mono);cursor:pointer;margin-bottom:14px;">&#x21BA; reset wishlist</button>
+      <div id="wishlist-items"></div>
+    </div>
+  </div>
+
+  <!-- SCOPRI -->
+  <div class="panel" id="panel-scopri">
+    <div style="padding-top:4px;">
+      <div style="margin-bottom:16px;"><p class="sec-title" style="margin-bottom:10px;">&#x1F9ED; Guida alla prima crypto</p>
+        <div id="guide-container">
+          <div class="guide-step active" id="gstep-0">
+            <div class="guide-question">Quanto vorresti investire come prima cifra?</div>
+            <div class="guide-options">
+              <button class="guide-option" onclick="guideAnswer(0,'small')">Meno di 50 euro &mdash; voglio provare senza rischiare troppo</button>
+              <button class="guide-option" onclick="guideAnswer(0,'medium')">50-200 euro &mdash; sono curioso e voglio capire</button>
+              <button class="guide-option" onclick="guideAnswer(0,'large')">Piu di 200 euro &mdash; sono motivato a fare sul serio</button>
+            </div>
+          </div>
+          <div class="guide-step" id="gstep-1">
+            <div class="guide-question">Per quanto tempo pensi di tenere le crypto?</div>
+            <div class="guide-options">
+              <button class="guide-option" onclick="guideAnswer(1,'short')">Pochi mesi &mdash; voglio vedere risultati presto</button>
+              <button class="guide-option" onclick="guideAnswer(1,'medium')">1-2 anni &mdash; ho pazienza</button>
+              <button class="guide-option" onclick="guideAnswer(1,'long')">Piu di 2 anni &mdash; investimento a lungo termine</button>
+            </div>
+          </div>
+          <div class="guide-step" id="gstep-2">
+            <div class="guide-question">Come reagiresti se il tuo investimento scendesse del 30%?</div>
+            <div class="guide-options">
+              <button class="guide-option" onclick="guideAnswer(2,'low')">Venderei subito &mdash; non reggo lo stress</button>
+              <button class="guide-option" onclick="guideAnswer(2,'medium')">Aspetterei &mdash; ma sarei preoccupato</button>
+              <button class="guide-option" onclick="guideAnswer(2,'high')">Comprerei ancora &mdash; le crisi sono occasioni</button>
+            </div>
+          </div>
+          <div class="guide-result" id="guide-result">
+            <div class="guide-result-title" id="guide-result-title"></div>
+            <div class="guide-result-text" id="guide-result-text"></div>
+            <button class="guide-restart" onclick="restartGuide()">&#x21BA; Ricomincia</button>
+          </div>
+        </div>
+      </div>
+      <div style="margin-bottom:16px;"><p class="sec-title" style="margin-bottom:10px;">&#x1F4A1; E se avessi investito...</p>
+        <div class="simulator-card">
+          <div class="sim-input-row"><span class="sim-label">Importo</span><input class="finput" id="sim-amount" type="number" value="100" min="1" style="flex:1;padding:8px 12px;font-size:14px;" oninput="runSimulator()"/></div>
+          <div class="sim-input-row"><span class="sim-label">Periodo</span>
+            <select class="finput" id="sim-period" style="flex:1;padding:8px 12px;font-size:14px;" onchange="runSimulator()">
+              <option value="7">1 settimana fa</option>
+              <option value="30" selected>1 mese fa</option>
+              <option value="90">3 mesi fa</option>
+            </select>
+          </div>
+          <div id="sim-results"></div>
+        </div>
+      </div>
+      <div><p class="sec-title" style="margin-bottom:10px;">&#x1F4D6; Glossario &mdash; tocca per spiegazione</p><div id="glossary-list"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- DETAIL OVERLAY -->
+<div class="detail-overlay" id="detail-overlay">
+  <div class="detail-header">
+    <button class="detail-back" onclick="closeDetail()">&#x2190; indietro</button>
+    <div><div class="detail-name" id="detail-name"></div><div class="detail-sym" id="detail-sym"></div></div>
+  </div>
+  <div class="detail-content" id="detail-content"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="nav-market" onclick="switchTab('market')"><span class="nav-icon">&#x1F4CA;</span>Mercato</button>
+  <button class="nav-btn" id="nav-opportunities" onclick="switchTab('opportunities')"><span class="nav-icon">&#x1F3AF;</span>Occasioni</button>
+  <button class="nav-btn" id="nav-portfolio" onclick="switchTab('portfolio')"><span class="nav-icon">&#x1F4BC;</span>Il mio</button>
+  <button class="nav-btn" id="nav-alerts" onclick="switchTab('alerts')"><span class="nav-icon">&#x1F514;</span>Alert</button>
+  <button class="nav-btn" id="nav-wishlist" onclick="switchTab('wishlist')"><span class="nav-icon">&#x2B50;</span>Wishlist</button>
+  <button class="nav-btn" id="nav-scopri" onclick="switchTab('scopri')"><span class="nav-icon">&#x1F4DA;</span>Scopri</button>
+</div>
+
+<!-- MODALS -->
+<div class="modal-overlay" id="wmodal" onclick="if(event.target.id==='wmodal')closeWModal()">
+  <div class="modal">
+    <div class="modal-title">&#x2B50; Aggiungi alla wishlist</div>
+    <div class="fgroup"><label class="flabel">Cerca la crypto</label><input class="finput" id="wtsearch" type="text" placeholder="es. SUI, Solana, Bitcoin..." oninput="doWSearch()" autocomplete="off"/><div class="search-drop" id="wsdrop"></div></div>
+    <div style="font-size:12px;color:rgba(255,255,255,0.5);line-height:1.5;margin-bottom:8px;">La soglia di avviso viene calcolata automaticamente in base alla volatilita del token.</div>
+    <div class="modal-btns"><button class="mbtn-cancel" onclick="closeWModal()">annulla</button><button class="mbtn-save" onclick="saveWish()">aggiungi</button></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal" onclick="if(event.target.id==='modal')closeModal()">
+  <div class="modal">
+    <div class="modal-title">Aggiungi crypto</div>
+    <div class="fgroup"><label class="flabel">Cerca la crypto</label><input class="finput" id="tsearch" type="text" placeholder="es. Bitcoin, Ethereum, Solana..." oninput="doSearch()" autocomplete="off"/><div class="search-drop" id="sdrop"></div></div>
+    <div class="frow">
+      <div class="fgroup"><label class="flabel">Quantita che ho</label><input class="finput" id="qty" type="number" placeholder="es. 0.5" step="any" min="0"/></div>
+      <div class="fgroup"><label class="flabel">Prezzo pagato $</label><input class="finput" id="buyprice" type="number" placeholder="es. 45000" step="any" min="0"/></div>
+    </div>
+    <div class="modal-btns"><button class="mbtn-cancel" onclick="closeModal()">annulla</button><button class="mbtn-save" onclick="savePos()">salva</button></div>
+  </div>
+</div>
+
+<script>
+const APP_PASS = 'zoronoanto10!';
+const TG_TOKEN = '8375937027:AAFUM8KeL0rd05IteyvAtPrJQu7Mapa4Hek';
+const TG_CHAT = '253145198';
+const TG_URL = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`;
+
+// CLOUD SYNC
+const BIN_ID = '6a01d25dc0954111d8092136';
+const BIN_KEY = '$2a$10$PwX2t3Nvv6ee6F9sbrZBLeibyPt4DJiepKu6CmkPJylZ7sfJ.2k7u';
+const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+let syncTimeout = null;
+let lastSyncHash = '';
+
+async function cloudLoad() {
+  try {
+    const r = await fetch(BIN_URL+'/latest', {
+      headers: {'X-Master-Key': BIN_KEY}
+    });
+    const d = await r.json();
+    const data = d.record;
+    if (data.positions) { positions = data.positions; }
+    if (data.wishlist) { wishlist = data.wishlist; }
+    console.log('Cloud sync: loaded', positions.length, 'positions,', wishlist.length, 'wishlist items');
+  } catch(e) {
+    console.log('Cloud load failed, using localStorage:', e);
+    positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
+    wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
+  }
+}
+
+async function cloudSave() {
+  const data = { positions, wishlist };
+  const hash = JSON.stringify(data);
+  if (hash === lastSyncHash) return;
+  lastSyncHash = hash;
+  // Also save to localStorage as backup
+  localStorage.setItem('ca_positions', JSON.stringify(positions));
+  localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
+  try {
+    await fetch(BIN_URL, {
+      method: 'PUT',
+      headers: {'Content-Type': 'application/json', 'X-Master-Key': BIN_KEY},
+      body: JSON.stringify(data)
+    });
+    const si = document.getElementById('sync-indicator');
+    if(si) { si.textContent='☁️ sync'; setTimeout(()=>{si.textContent='';},2000); }
+    console.log('Cloud sync: saved');
+  } catch(e) {
+    console.log('Cloud save failed:', e);
+  }
+}
+
+function scheduleSave() {
+  clearTimeout(syncTimeout);
+  syncTimeout = setTimeout(cloudSave, 1500);
+}
+
+function checkAuth(){if(localStorage.getItem('ca_auth')===APP_PASS)return;document.getElementById('lockscreen').style.display='flex';document.querySelector('.app').style.display='none';document.querySelector('.bottom-nav').style.display='none';}
+function tryLogin(){const v=document.getElementById('pass-input').value;if(v===APP_PASS){localStorage.setItem('ca_auth',APP_PASS);document.getElementById('lockscreen').style.display='none';document.querySelector('.app').style.display='block';document.querySelector('.bottom-nav').style.display='flex';loadAll();}else{document.getElementById('pass-error').style.display='block';document.getElementById('pass-input').value='';}}
+
+let coins=[],globalData=null,fg=null;
+let positions=JSON.parse(localStorage.getItem('ca_positions')||'[]');
+let alertLog=JSON.parse(localStorage.getItem('ca_alertlog')||'[]');
+let lastAlerts=JSON.parse(localStorage.getItem('ca_lastalerts')||'{}');
+let wishlist=JSON.parse(localStorage.getItem('ca_wishlist')||'[]');
+let selectedCoin=null,wSelectedCoin=null,searchTimer=null,wSearchTimer=null;
+let guideAnswers={};
+
+async function sendTelegram(msg){try{const r=await fetch(TG_URL,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({chat_id:TG_CHAT,text:msg,parse_mode:'HTML'})});const d=await r.json();return d.ok;}catch(e){return false;}}
+function addLog(msg,type='sent'){const now=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});alertLog.unshift({msg,type,time:now});if(alertLog.length>20)alertLog=alertLog.slice(0,20);localStorage.setItem('ca_alertlog',JSON.stringify(alertLog));renderLog();}
+function renderLog(){const el=document.getElementById('notif-log');if(!el)return;el.innerHTML=alertLog.length?alertLog.map(l=>`<div class="log-item ${l.type}">[${l.time}] ${l.msg}</div>`).join(''):'<div class="log-item">Nessuna notifica ancora</div>';}
+
+async function sendTestMessage(){const btn=document.getElementById('test-btn');btn.disabled=true;btn.textContent='Invio...';const ok=await sendTelegram('⚔️ <b>ZoronoAnto Crypto — Bot attivo!</b>\n\n✅ Tutto funziona correttamente.\n\nRiceverai notifiche divise per categoria:\n💼 <b>PORTAFOGLIO</b> — le tue crypto\n🎯 <b>WISHLIST</b> — prezzi target\n📊 <b>MERCATO</b> — segnali generali\n🚀 <b>OCCASIONI</b> — opportunita top 100');if(ok){btn.textContent='✅ Inviato! Controlla Telegram';addLog('Messaggio di test inviato','sent');}else{btn.textContent='❌ Errore — riprova';addLog('Errore invio test','error');}setTimeout(()=>{btn.disabled=false;btn.textContent='📨 Invia messaggio di test';},3000);}
+
+function switchTab(t){['market','opportunities','portfolio','alerts','wishlist','scopri'].forEach(x=>{document.getElementById('panel-'+x).classList.toggle('active',x===t);document.getElementById('nav-'+x).classList.toggle('active',x===t);});if(t==='portfolio')renderPortfolio();if(t==='opportunities')renderOpportunities();if(t==='alerts')renderLog();if(t==='wishlist')renderWishlist();if(t==='scopri'){renderGlossary();runSimulator();}}
+
+function fmt(n){if(!n&&n!==0)return'—';if(n>=1e12)return'$'+(n/1e12).toFixed(2)+'T';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1000)return'$'+n.toLocaleString('en-US',{maximumFractionDigits:2});if(n>=1)return'$'+n.toFixed(2);return'$'+n.toFixed(6);}
+
+function score(coin){if(!coin)return 0;let s=0;const fgv=fg?parseInt(fg.value):50;const btcDom=globalData?globalData.market_cap_percentage.btc:50;const chg24=coin.price_change_percentage_24h||0;const chg7=coin.price_change_percentage_7d_in_currency||0;const volRatio=(coin.total_volume||0)/(coin.market_cap||1);const rank=coin.market_cap_rank||999;if(fgv<25)s-=2;else if(fgv<45)s-=1;else if(fgv>70)s+=1;else if(fgv>55)s+=1;if(chg24>8)s+=2;else if(chg24>3)s+=1;else if(chg24<-8)s-=2;else if(chg24<-3)s-=1;if(chg7>15)s+=2;else if(chg7>5)s+=1;else if(chg7<-15)s-=2;else if(chg7<-5)s-=1;if(volRatio>0.15)s+=1;else if(volRatio<0.02)s-=1;if(rank<=5)s+=2;else if(rank<=20)s+=1;if(btcDom>56&&rank>10)s-=1;else if(btcDom<44&&rank>10)s+=1;return s;}
+
+function verdictFromScore(s,coin){const chg7=coin?(coin.price_change_percentage_7d_in_currency||0):0;if(s>=4)return{badge:'vb-buy',label:'✅ Segnale positivo',text:`Questo asset mostra segnali interessanti: ${chg7>0?'e salito del '+chg7.toFixed(1)+'% negli ultimi 7 giorni':'il trend recente e in recupero'} e i volumi sostengono il movimento. Non e una garanzia, ma il contesto e favorevole.`,cardClass:'featured'};if(s>=2)return{badge:'vb-watch',label:'👀 Da tenere d\'occhio',text:'Segnali leggermente positivi ma non ancora abbastanza forti. Vale la pena monitorarlo nei prossimi giorni.',cardClass:''};if(s<=-4)return{badge:'vb-avoid',label:'🚫 Meglio evitare ora',text:'Piu indicatori puntano in negativo. Non e il momento giusto.',cardClass:'warning'};if(s<=-2)return{badge:'vb-avoid',label:'⚠️ Situazione delicata',text:'Il contesto attuale non favorisce questo asset. Aspetta segnali di stabilizzazione.',cardClass:'warning'};return{badge:'vb-hold',label:'⏸ Mercato fermo',text:'Non ci sono segnali chiari in nessuna direzione. In questi momenti e meglio osservare che agire.',cardClass:''};}
+
+function situationText(){if(!fg||!globalData)return null;const fgv=parseInt(fg.value);const mcapChg=globalData.market_cap_change_percentage_24h_usd||0;const gainers=coins.filter(c=>(c.price_change_percentage_24h||0)>0).length;const pct=Math.round(gainers/coins.length*100);const btcDom=globalData.market_cap_percentage.btc.toFixed(1);let emoji,title,desc,cls;if(fgv<25){emoji='😱';cls='bad';title='Il mercato ha molta paura';desc=`L'indice Fear & Greed e a ${fgv}/100: la maggior parte degli investitori sta vendendo per paura. Storicamente questi momenti possono essere occasioni per chi ha pazienza, ma il rischio di ulteriori cali e reale.`;}else if(fgv<45){emoji='😟';cls='neutral';title='Il mercato e in difficolta';desc=`Sentiment negativo (${fgv}/100). ${pct}% delle top 100 e in positivo oggi. Meglio aspettare segnali piu chiari prima di fare mosse importanti.`;}else if(fgv>75){emoji='🤑';cls='watch';title='Attenzione: troppa euforia';desc=`L'indice e a ${fgv}/100: quando tutti sono ottimisti, spesso il mercato e vicino a un massimo. Chi ha gia posizioni potrebbe pensare a proteggere i guadagni.`;}else if(mcapChg>3){emoji='📈';cls='good';title='Il mercato sta salendo';desc=`Giornata positiva: la market cap e salita del ${mcapChg.toFixed(1)}% e il ${pct}% delle top 100 e in verde. Contesto favorevole per chi vuole analizzare opportunita.`;}else if(mcapChg<-3){emoji='📉';cls='bad';title='Il mercato sta scendendo';desc=`Giornata negativa: la market cap e calata del ${Math.abs(mcapChg).toFixed(1)}%. Solo il ${pct}% e in positivo. Meglio aspettare stabilizzazione.`;}else{emoji='😐';cls='neutral';title='Il mercato e fermo';desc=`Oggi non succede molto: il ${pct}% delle top 100 e in positivo e i movimenti sono contenuti. Tieni gli occhi aperti.`;}const btcNote=parseFloat(btcDom)>55?` Bitcoin domina (${btcDom}%): penalizza le altcoin.`:parseFloat(btcDom)<44?` La dominanza BTC e bassa (${btcDom}%): denaro verso le altcoin.`:'';return{emoji,title,desc:desc+btcNote,cls};}
+
+function renderMarket(){const sit=situationText();if(sit)document.getElementById('situation-card').innerHTML=`<div class="situation-card ${sit.cls}"><div class="sit-emoji">${sit.emoji}</div><div class="sit-title">${sit.title}</div><div class="sit-desc">${sit.desc}</div></div>`;const btcDom=globalData?globalData.market_cap_percentage.btc.toFixed(1):'—';const ethDom=globalData?globalData.market_cap_percentage.eth.toFixed(1):'—';const fgv=fg?parseInt(fg.value):'—';const mcap=globalData?fmt(globalData.total_market_cap.usd):'—';document.getElementById('macro-pills').innerHTML=`<div class="pill">Paura/Euforia: <span>${fgv}/100</span></div><div class="pill">BTC: <span>${btcDom}%</span></div><div class="pill">ETH: <span>${ethDom}%</span></div><div class="pill">Market cap: <span>${mcap}</span></div>`;if(coins.length){const top5=coins.slice(0,5).map(c=>{const chg=c.price_change_percentage_24h||0;return`<strong>${c.name}</strong> ${fmt(c.current_price)} <span class="${chg>=0?'positive':'negative'}">(${chg>=0?'+':''}${chg.toFixed(1)}%)</span>`;}).join(' · ');const bg=[...coins].sort((a,b)=>(b.price_change_percentage_24h||0)-(a.price_change_percentage_24h||0))[0];const bl=[...coins].sort((a,b)=>(a.price_change_percentage_24h||0)-(b.price_change_percentage_24h||0))[0];document.getElementById('market-summary').innerHTML=`<div style="margin-bottom:10px;">${top5}</div><div style="margin-bottom:6px;">📈 Miglior crypto oggi: <strong>${bg.name}</strong> +${(bg.price_change_percentage_24h||0).toFixed(1)}%</div><div>📉 Peggiore oggi: <strong>${bl.name}</strong> ${(bl.price_change_percentage_24h||0).toFixed(1)}%</div>`;}const now=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});document.getElementById('uptime').textContent='aggiornato alle '+now;document.getElementById('live-label').textContent='live · '+now;}
+
+function renderOpportunities(){if(!coins.length)return;const scored=coins.map(c=>({coin:c,s:score(c)}));const buyList=scored.filter(x=>x.s>=2).sort((a,b)=>b.s-a.s).slice(0,5);const watchList=scored.filter(x=>x.s===0||x.s===1).sort((a,b)=>b.s-a.s).slice(0,4);const avoidList=scored.filter(x=>x.s<=-2).sort((a,b)=>a.s-b.s).slice(0,4);const dipOpps=coins.filter(c=>{const chg7=c.price_change_percentage_7d_in_currency||0;return chg7<-10&&c.market_cap_rank<=30&&score(c)>=-1;}).slice(0,3);
+function card(item){const c=item.coin;const v=verdictFromScore(item.s,c);const chg24=c.price_change_percentage_24h||0;const chg7=c.price_change_percentage_7d_in_currency||0;const inWish=wishlist.some(w=>w.coinId===c.id);const wishBtn=inWish?`<button style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:0.5px solid rgba(57,255,20,0.3);background:rgba(57,255,20,0.08);color:#57ff7a;font-size:11px;font-family:var(--mono);cursor:default;">⭐ In wishlist</button>`:`<button onclick="quickAddWish('${c.id}','${c.name}','${c.symbol.toUpperCase()}',${c.current_price})" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-family:var(--mono);cursor:pointer;">+ aggiungi a wishlist</button>`;return`<div class="opp-card ${v.cardClass}" onclick="openDetail('${c.id}')"><div class="opp-top"><div><div class="opp-name">${c.name}</div><div class="opp-sub">#${c.market_cap_rank} · ${c.symbol.toUpperCase()}</div></div><div style="text-align:right;"><div class="opp-price">${fmt(c.current_price)}</div><div class="opp-chg ${chg24>=0?'positive':'negative'}">${chg24>=0?'+':''}${chg24.toFixed(2)}% oggi</div>${chg7?`<div class="opp-chg ${chg7>=0?'positive':'negative'}" style="font-size:11px;">${chg7>=0?'+':''}${chg7.toFixed(1)}% settimana</div>`:''}</div></div><div class="opp-verdict"><span class="verdict-badge ${v.badge}">${v.label}</span><br>${v.text}${wishBtn}</div></div>`;}
+let dipHTML='';if(dipOpps.length){dipHTML=`<div class="sec"><div class="sec-head"><span class="sec-title">📉 Scesi tanto — possibile rimbalzo?</span></div><div style="font-size:12px;color:rgba(255,255,255,0.5);margin-bottom:10px;line-height:1.5;">Crypto importanti scese molto questa settimana. Tendono a recuperare ma non e garantito.</div>${dipOpps.map(c=>{const chg7=c.price_change_percentage_7d_in_currency||0;const inW=wishlist.some(w=>w.coinId===c.id);const wBtn=inW?`<button style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:0.5px solid rgba(57,255,20,0.3);background:rgba(57,255,20,0.08);color:#57ff7a;font-size:11px;font-family:var(--mono);cursor:default;">⭐ In wishlist</button>`:`<button onclick="quickAddWish('${c.id}','${c.name}','${c.symbol.toUpperCase()}',${c.current_price})" style="margin-top:8px;width:100%;padding:6px;border-radius:8px;border:0.5px solid var(--border2);background:transparent;color:rgba(255,255,255,0.5);font-size:11px;font-family:var(--mono);cursor:pointer;">+ aggiungi a wishlist</button>`;return`<div class="opp-card"><div class="opp-top"><div><div class="opp-name">${c.name}</div><div class="opp-sub">#${c.market_cap_rank} · ${c.symbol.toUpperCase()}</div></div><div style="text-align:right;"><div class="opp-price">${fmt(c.current_price)}</div><div class="opp-chg negative">${chg7.toFixed(1)}% settimana</div></div></div><div class="opp-verdict"><span class="verdict-badge vb-watch">👀 Calo significativo</span><br>Ha perso il ${Math.abs(chg7).toFixed(1)}% in 7 giorni. E una crypto importante (top ${c.market_cap_rank}). Potrebbe essere un'occasione DCA.${wBtn}</div></div>`;}).join('')}</div>`;}
+document.getElementById('dip-section').innerHTML=dipHTML;document.getElementById('buy-list').innerHTML=buyList.length?buyList.map(x=>card(x)).join(''):'<div class="empty" style="padding:16px;">Nessun segnale positivo forte ora.</div>';document.getElementById('watch-list').innerHTML=watchList.length?watchList.map(x=>card(x)).join(''):'';document.getElementById('avoid-list').innerHTML=avoidList.length?avoidList.map(x=>card(x)).join(''):'<div class="empty" style="padding:16px;">Nessun segnale negativo forte ora.</div>';}
+
+function positionAdvice(pos,currentPrice){const coin=coins.find(c=>c.id===pos.coinId);const pnlPct=((currentPrice-pos.buyPrice)/pos.buyPrice)*100;const s=score(coin);const fgv=fg?parseInt(fg.value):50;let cls,verdict,text;if(pnlPct>50&&s<=0){cls='caution';verdict='💰 Sei in forte profitto — valuta di prenderne un po\'';text=`Hai guadagnato il ${pnlPct.toFixed(1)}% e i segnali non sono piu positivi. Potresti vendere una parte per assicurarti il guadagno.`;}else if(pnlPct>30){cls='good';verdict='✅ Ottima posizione — tieni';text=`Sei in profitto del ${pnlPct.toFixed(1)}%. Nessuna fretta di muoversi.`;}else if(pnlPct>0){cls='neutral';verdict='⏸ In leggero profitto — osserva';text=`Sei in positivo del ${pnlPct.toFixed(1)}%. ${s>=2?'I segnali sono positivi, potrebbe crescere ancora.':s<=-2?'Ma i segnali non sono ottimali — tieni d\'occhio.':'Nessuna direzione chiara.'}`;}else if(pnlPct>-15){cls='neutral';verdict='⏸ Leggera perdita — aspetta';text=`Sei in perdita del ${Math.abs(pnlPct).toFixed(1)}%. ${s>=1?'I segnali sono leggermente positivi, potrebbe recuperare.':'Il mercato e fermo. Aspetta prima di decidere.'}`;}else if(pnlPct>-35){cls='caution';verdict='⚠️ Perdita significativa — valuta';text=`Sei in perdita del ${Math.abs(pnlPct).toFixed(1)}%. ${fgv<35?'Il mercato ha paura — potrebbe scendere ancora.':'Prima di vendere in perdita, considera se credi ancora nel progetto.'}`;}else{cls='bad';verdict='🚨 Perdita elevata — rifletti bene';text=`Sei in perdita del ${Math.abs(pnlPct).toFixed(1)}%. Valuta onestamente: credi ancora in questo asset? Se si, tieni. Se no, considera di uscire.`;}return{cls,verdict,text};}
+
+function renderPortfolio(){if(!coins.length&&positions.length){setTimeout(renderPortfolio,600);return;}let totalVal=0,totalCost=0;const cards=positions.map((pos,idx)=>{const coin=coins.find(c=>c.id===pos.coinId);const cp=coin?coin.current_price:pos.buyPrice;const val=cp*pos.qty;const cost=pos.buyPrice*pos.qty;const pnl=val-cost;const pnlPct=((cp-pos.buyPrice)/pos.buyPrice)*100;totalVal+=val;totalCost+=cost;const adv=positionAdvice(pos,cp);return`<div class="pos-card"><div class="pos-top"><div><div class="pos-name">${pos.coinName}</div><div class="pos-qty">${pos.qty} ${pos.coinSymbol} · pagato ${fmt(pos.buyPrice)} cad.</div></div><button class="pos-del" onclick="delPos(${idx})">✕</button></div><div class="pos-nums"><div class="pos-num"><div class="pos-num-label">ora vale</div><div class="pos-num-val">${fmt(val)}</div></div><div class="pos-num"><div class="pos-num-label">guadagno/perdita</div><div class="pos-num-val ${pnl>=0?'positive':'negative'}">${pnl>=0?'+':'−'}${fmt(Math.abs(pnl))}</div></div><div class="pos-num"><div class="pos-num-label">variazione</div><div class="pos-num-val ${pnlPct>=0?'positive':'negative'}">${pnlPct>=0?'+':''}${pnlPct.toFixed(1)}%</div></div></div><div class="pos-advice-box ${adv.cls}"><div class="pos-advice-verdict">${adv.verdict}</div><div class="pos-advice-text">${adv.text}</div></div></div>`;}).join('');const totalPnl=totalVal-totalCost;const totalPct=totalCost>0?((totalVal-totalCost)/totalCost*100):0;document.getElementById('port-total').textContent='$'+totalVal.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});if(positions.length){document.getElementById('port-pnl').innerHTML=`<span class="${totalPnl>=0?'positive':'negative'}">${totalPnl>=0?'+':'−'}$${Math.abs(totalPnl).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})} (${totalPct>=0?'+':''}${totalPct.toFixed(1)}%)</span>`;document.getElementById('port-advice').textContent=totalPct>30?'Il tuo portafoglio e in ottima salute.':totalPct>0?'Sei in profitto complessivo. Buona situazione.':totalPct>-20?'Piccola perdita complessiva. Nessun allarme.':'Perdita significativa. Valuta la situazione con calma.';}else{document.getElementById('port-pnl').textContent='';document.getElementById('port-advice').textContent='Aggiungi le crypto che hai comprato per monitorarle.';}document.getElementById('positions').innerHTML=positions.length?cards:'<div class="empty">Nessuna crypto ancora.<br>Aggiungi quello che hai comprato.</div>';}
+function delPos(idx){positions.splice(idx,1);localStorage.setItem('ca_positions',JSON.stringify(positions));renderPortfolio();}
+
+function doSearch(){const q=document.getElementById('tsearch').value.toLowerCase().trim();clearTimeout(searchTimer);const drop=document.getElementById('sdrop');if(!q){drop.style.display='none';return;}searchTimer=setTimeout(()=>{const res=coins.filter(c=>c.name.toLowerCase().includes(q)||c.symbol.toLowerCase().includes(q)).slice(0,6);if(!res.length){drop.style.display='none';return;}drop.style.display='block';drop.innerHTML=res.map(c=>`<div class="search-item" onclick="pickCoin('${c.id}','${c.name}','${c.symbol.toUpperCase()}',${c.current_price})"><span>${c.name} <span class="search-item-sym">${c.symbol.toUpperCase()}</span></span><span style="color:var(--text2);font-family:var(--mono);font-size:12px;">${fmt(c.current_price)}</span></div>`).join('');},180);}
+function pickCoin(id,name,sym,price){selectedCoin={id,name,sym,price};document.getElementById('tsearch').value=name+' ('+sym+')';document.getElementById('sdrop').style.display='none';document.getElementById('buyprice').placeholder=price.toLocaleString('en-US',{maximumFractionDigits:4});}
+function openModal(){selectedCoin=null;document.getElementById('tsearch').value='';document.getElementById('qty').value='';document.getElementById('buyprice').value='';document.getElementById('sdrop').style.display='none';document.getElementById('modal').classList.add('open');}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function savePos(){if(!selectedCoin){alert('Cerca e seleziona una crypto dall\'elenco');return;}const qty=parseFloat(document.getElementById('qty').value);const bp=parseFloat(document.getElementById('buyprice').value);if(!qty||qty<=0){alert('Inserisci la quantita che hai');return;}if(!bp||bp<=0){alert('Inserisci il prezzo che hai pagato');return;}positions.push({coinId:selectedCoin.id,coinName:selectedCoin.name,coinSymbol:selectedCoin.sym,qty,buyPrice:bp});localStorage.setItem('ca_positions',JSON.stringify(positions));closeModal();renderPortfolio();}
+
+function smartThreshold(coinId){const coin=coins.find(c=>c.id===coinId);const rank=coin?coin.market_cap_rank:50;if(rank<=10)return 7;if(rank<=30)return 10;return 15;}
+function quickAddWish(id,name,sym,price){if(wishlist.some(w=>w.coinId===id)){alert(name+' e gia nella wishlist');return;}const t=smartThreshold(id);const coin=coins.find(c=>c.id===id);const rank=coin?coin.market_cap_rank:50;const targetPrice=(price*(1-t/100)).toFixed(4);wishlist.push({coinId:id,coinName:name,coinSymbol:sym,addedPrice:price,threshold:t,addedAt:new Date().toLocaleDateString('it-IT')});localStorage.setItem('ca_wishlist',JSON.stringify(wishlist));renderOpportunities();alert('⭐ '+name+' aggiunta alla wishlist!\n\nTi avviso quando scende del '+t+'%\nPrezzo target: $'+targetPrice+'\n\n(Soglia calcolata in base alla volatilita del #'+rank+')');}
+function resetWishlist(){wishlist=[];scheduleSave();localStorage.removeItem('ca_lastalerts');renderWishlist();renderOpportunities();alert('Wishlist resettata!');}
+function doWSearch(){const q=document.getElementById('wtsearch').value.toLowerCase().trim();clearTimeout(wSearchTimer);const drop=document.getElementById('wsdrop');if(!q){drop.style.display='none';return;}wSearchTimer=setTimeout(()=>{const res=coins.filter(c=>c.name.toLowerCase().includes(q)||c.symbol.toLowerCase().includes(q)).slice(0,6);if(!res.length){drop.style.display='none';return;}drop.style.display='block';drop.innerHTML=res.map(c=>`<div class="search-item" onclick="pickWCoin('${c.id}','${c.name}','${c.symbol.toUpperCase()}',${c.current_price})"><span>${c.name} <span class="search-item-sym">${c.symbol.toUpperCase()}</span></span><span style="color:var(--text2);font-family:var(--mono);font-size:12px;">${fmt(c.current_price)}</span></div>`).join('');},180);}
+function pickWCoin(id,name,sym,price){wSelectedCoin={id,name,sym,price};document.getElementById('wtsearch').value=name+' ('+sym+')';document.getElementById('wsdrop').style.display='none';}
+function openWishModal(){wSelectedCoin=null;document.getElementById('wtsearch').value='';document.getElementById('wsdrop').style.display='none';document.getElementById('wmodal').classList.add('open');}
+function closeWModal(){document.getElementById('wmodal').classList.remove('open');}
+function saveWish(){if(!wSelectedCoin){alert('Cerca e seleziona una crypto');return;}if(wishlist.some(w=>w.coinId===wSelectedCoin.id)){alert('Questa crypto e gia nella wishlist');return;}const t=smartThreshold(wSelectedCoin.id);wishlist.push({coinId:wSelectedCoin.id,coinName:wSelectedCoin.name,coinSymbol:wSelectedCoin.sym,addedPrice:wSelectedCoin.price,threshold:t,addedAt:new Date().toLocaleDateString('it-IT')});localStorage.setItem('ca_wishlist',JSON.stringify(wishlist));closeWModal();renderWishlist();}
+
+function renderWishlist(){const el=document.getElementById('wishlist-items');if(!el)return;if(!wishlist.length){el.innerHTML='<div class="empty">Nessuna crypto nella wishlist.<br>Aggiungine una per monitorarla.</div>';return;}el.innerHTML=wishlist.map((w,idx)=>{const coin=coins.find(c=>c.id===w.coinId);const currentPrice=coin?coin.current_price:null;const targetPrice=w.addedPrice*(1-w.threshold/100);const chgFromAdd=currentPrice?((currentPrice-w.addedPrice)/w.addedPrice*100):null;const pctNeededDrop=currentPrice?((currentPrice-targetPrice)/currentPrice*100):null;let statusEmoji,statusText,statusCls;if(!currentPrice){statusEmoji='⏳';statusText='Caricamento...';statusCls='neutral';}else if(currentPrice<=targetPrice){statusEmoji='🎯';statusText='PREZZO TARGET RAGGIUNTO — valuta l\'ingresso!';statusCls='good';}else if(pctNeededDrop<3){statusEmoji='🔥';statusText=`Quasi al target — manca solo il ${pctNeededDrop.toFixed(1)}%`;statusCls='watch';}else if(chgFromAdd>15){statusEmoji='📈';statusText=`Salita del +${chgFromAdd.toFixed(1)}% — il target si allontana`;statusCls='neutral';}else if(chgFromAdd<-5){statusEmoji='📉';statusText=`Scesa del ${Math.abs(chgFromAdd).toFixed(1)}% — serve ancora un -${pctNeededDrop.toFixed(1)}% per il target`;statusCls='watch';}else{statusEmoji='👀';statusText=`In attesa — deve scendere ancora del ${pctNeededDrop.toFixed(1)}% per il target`;statusCls='neutral';}const s=coin?score(coin):0;const sigText=s>=3?'✅ Segnale positivo in questo momento':s>=1?'👀 Segnali leggermente positivi':s<=-2?'⚠️ Segnali negativi — meglio aspettare':'⏸ Mercato fermo su questo asset';return`<div class="pos-card"><div class="pos-top"><div><div class="pos-name">${w.coinName}</div><div class="pos-qty">${w.coinSymbol} · aggiunto il ${w.addedAt}</div></div><button class="pos-del" onclick="deleteWish(${idx})">✕</button></div><div class="pos-nums"><div class="pos-num"><div class="pos-num-label">prezzo ora</div><div class="pos-num-val">${currentPrice?fmt(currentPrice):'—'}</div></div><div class="pos-num"><div class="pos-num-label">prezzo target</div><div class="pos-num-val positive">${fmt(targetPrice)}</div></div><div class="pos-num"><div class="pos-num-label">soglia</div><div class="pos-num-val">-${w.threshold}%</div></div></div><div class="pos-advice-box ${statusCls==='good'?'good':statusCls==='watch'?'caution':'neutral'}" style="margin-bottom:8px;"><div class="pos-advice-verdict">${statusEmoji} ${statusText}</div></div><div class="pos-advice-box neutral"><div class="pos-advice-text">${sigText}</div></div></div>`;}).join('');}
+function deleteWish(idx){wishlist.splice(idx,1);localStorage.setItem('ca_wishlist',JSON.stringify(wishlist));renderWishlist();}
+
+async function checkAlerts(){if(!coins.length)return;const now=Date.now();const COOLDOWN=4*60*60*1000;const fgv=fg?parseInt(fg.value):50;if(fgv<25){const key='fg_extreme';if(!lastAlerts[key]||now-lastAlerts[key]>COOLDOWN){const ok=await sendTelegram(`📊 <b>MERCATO — Paura estrema!</b>\n\nIndice Fear & Greed: ${fgv}/100\n\nIl mercato e in forte paura. Storicamente questi momenti possono essere occasioni di acquisto per chi ha pazienza. Non agire d'impulso.`);if(ok){lastAlerts[key]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('📊 Fear & Greed estremo ('+fgv+')','sent');}}}
+for(const pos of positions){const coin=coins.find(c=>c.id===pos.coinId);if(!coin)continue;const pnlPct=((coin.current_price-pos.buyPrice)/pos.buyPrice)*100;const chg24=coin.price_change_percentage_24h||0;const key=`drop_${pos.coinId}`;if(pnlPct<=-10&&(!lastAlerts[key]||now-lastAlerts[key]>COOLDOWN)){const ok=await sendTelegram(`💼 <b>PORTAFOGLIO — ${pos.coinName} in calo</b>\n\n📉 Sei in perdita del ${Math.abs(pnlPct).toFixed(1)}%\n\nHai comprato a: $${pos.buyPrice}\nPrezzo attuale: $${coin.current_price}\n\n💡 Se credi ancora nel progetto, questo potrebbe essere un buon momento per aggiungere gradualmente (DCA).`);if(ok){lastAlerts[key]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('💼 '+pos.coinName+' -'+Math.abs(pnlPct).toFixed(1)+'%','sent');}}
+const key2=`pump_${pos.coinId}`;if(pnlPct>=20&&(!lastAlerts[key2]||now-lastAlerts[key2]>COOLDOWN)){const ok=await sendTelegram(`💼 <b>PORTAFOGLIO — ${pos.coinName} in forte profitto</b>\n\n📈 Sei in guadagno del +${pnlPct.toFixed(1)}%\n\nHai comprato a: $${pos.buyPrice}\nPrezzo attuale: $${coin.current_price}\n\n💡 Potresti valutare di vendere una parte per assicurarti il guadagno.`);if(ok){lastAlerts[key2]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('💼 '+pos.coinName+' +'+pnlPct.toFixed(1)+'%','sent');}}}
+const dipOpps=coins.filter(c=>{const chg7=c.price_change_percentage_7d_in_currency||0;return chg7<-10&&c.market_cap_rank<=30;});if(dipOpps.length>0){const key='dca_opps';if(!lastAlerts[key]||now-lastAlerts[key]>COOLDOWN*2){const list=dipOpps.slice(0,3).map(c=>`• ${c.name}: ${(c.price_change_percentage_7d_in_currency||0).toFixed(1)}% questa settimana`).join('\n');const ok=await sendTelegram(`🚀 <b>OCCASIONI — Possibile rimbalzo in vista</b>\n\nQueste crypto importanti sono scese molto questa settimana:\n${list}\n\nSono progetti solidi che storicamente tendono a recuperare. Valuta se aggiungere gradualmente.`);if(ok){lastAlerts[key]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('🚀 Occasioni DCA: '+dipOpps.slice(0,3).map(c=>c.symbol.toUpperCase()).join(', '),'sent');}}}
+await checkWishlistAlerts();}
+
+async function checkWishlistAlerts(){if(!wishlist.length)return;const now=Date.now();const COOLDOWN=6*60*60*1000;for(const w of wishlist){const coin=coins.find(c=>c.id===w.coinId);if(!coin)continue;const cp=coin.current_price;const tp=w.addedPrice*(1-w.threshold/100);const chgFromAdd=((cp-w.addedPrice)/w.addedPrice*100);const key=`wish_${w.coinId}`;if(cp<=tp&&(!lastAlerts[key+'_drop']||now-lastAlerts[key+'_drop']>COOLDOWN)){const ok=await sendTelegram(`🎯 <b>WISHLIST — ${w.coinName} al prezzo target!</b>\n\n✅ Questo e il momento che aspettavi\n\nPrezzo quando aggiunta: $${w.addedPrice.toFixed(4)}\nPrezzo attuale: $${cp.toFixed(4)}\nCalo: -${Math.abs(chgFromAdd).toFixed(1)}%\n\n💡 Apri l'app per l'analisi completa prima di decidere se entrare.`);if(ok){lastAlerts[key+'_drop']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('🎯 '+w.coinName+' al target!','sent');}}else if(cp>tp&&((cp-tp)/tp*100)<3&&(!lastAlerts[key+'_near']||now-lastAlerts[key+'_near']>COOLDOWN)){const ok=await sendTelegram(`🎯 <b>WISHLIST — ${w.coinName} quasi al target</b>\n\n🔥 Ci siamo quasi!\n\nPrezzo attuale: $${cp.toFixed(4)}\nTarget: $${tp.toFixed(4)}\n\n💡 Tienila d'occhio!`);if(ok){lastAlerts[key+'_near']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('🔥 '+w.coinName+' vicino al target','sent');}}else if(chgFromAdd>20&&(!lastAlerts[key+'_pump']||now-lastAlerts[key+'_pump']>COOLDOWN)){const ok=await sendTelegram(`🎯 <b>WISHLIST — ${w.coinName} si allontana dal target</b>\n\n📈 E salita del +${chgFromAdd.toFixed(1)}% da quando l'hai aggiunta\n\nTarget originale: $${tp.toFixed(4)}\nPrezzo attuale: $${cp.toFixed(4)}\n\n💡 Puoi aspettare una correzione o aggiornare la soglia nell'app.`);if(ok){lastAlerts[key+'_pump']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('📈 '+w.coinName+' si allontana dal target','sent');}}}}
+
+function openDetail(coinId){const coin=coins.find(c=>c.id===coinId);if(!coin)return;const s=score(coin);const v=verdictFromScore(s,coin);const chg24=coin.price_change_percentage_24h||0;const chg7=coin.price_change_percentage_7d_in_currency||0;const volRatio=((coin.total_volume||0)/(coin.market_cap||1)*100);const fgv=fg?parseInt(fg.value):50;const sigBorder=s>=2?'var(--green-border)':s<=-2?'var(--red-border)':'var(--border2)';const sigBg=s>=2?'var(--green-bg)':s<=-2?'var(--red-bg)':'var(--bg4)';const reasons=[];if(fgv<35)reasons.push('mercato in paura (Fear & Greed '+fgv+'/100)');else if(fgv>65)reasons.push('mercato ottimista (attenzione ai massimi)');else reasons.push('sentiment neutro');if(chg24>5)reasons.push('forte salita oggi (+'+chg24.toFixed(1)+'%)');else if(chg24<-5)reasons.push('forte calo oggi ('+chg24.toFixed(1)+'%)');if(chg7>10)reasons.push('trend settimanale positivo (+'+chg7.toFixed(1)+'%)');else if(chg7<-10)reasons.push('trend settimanale negativo');if(volRatio>15)reasons.push('volumi elevati');else if(volRatio<3)reasons.push('volumi bassi');document.getElementById('detail-name').textContent=coin.name;document.getElementById('detail-sym').textContent='#'+coin.market_cap_rank+' · '+coin.symbol.toUpperCase();document.getElementById('detail-content').innerHTML=`<div class="detail-price">${fmt(coin.current_price)}</div><div style="font-size:13px;color:rgba(255,255,255,0.5);">Prezzo attuale</div><div class="detail-grid"><div class="detail-stat"><div class="detail-stat-label">Variazione 24h</div><div class="detail-stat-val ${chg24>=0?'positive':'negative'}">${chg24>=0?'+':''}${chg24.toFixed(2)}%</div></div><div class="detail-stat"><div class="detail-stat-label">Variazione 7gg</div><div class="detail-stat-val ${chg7>=0?'positive':'negative'}">${chg7>=0?'+':''}${chg7.toFixed(2)}%</div></div><div class="detail-stat"><div class="detail-stat-label">Market Cap</div><div class="detail-stat-val">${fmt(coin.market_cap)}</div></div><div class="detail-stat"><div class="detail-stat-label">Volume 24h</div><div class="detail-stat-val">${fmt(coin.total_volume)}</div></div><div class="detail-stat"><div class="detail-stat-label">Ranking</div><div class="detail-stat-val">#${coin.market_cap_rank}</div></div><div class="detail-stat"><div class="detail-stat-label">Vol/MCap</div><div class="detail-stat-val">${volRatio.toFixed(1)}%</div></div></div><div style="margin-top:16px;"><div class="sec-title" style="margin-bottom:10px;">Segnale algoritmo</div><div style="background:${sigBg};border:0.5px solid ${sigBorder};border-radius:12px;padding:14px;"><div style="font-size:14px;font-weight:600;margin-bottom:8px;color:#f0f0f5;">${v.label}</div><div class="detail-explain">Il segnale e basato su: ${reasons.join(', ')}.</div></div></div><div style="margin-top:16px;"><div class="sec-title" style="margin-bottom:10px;">Cosa significa per te</div><div class="detail-explain">${v.text}</div></div><div style="margin-top:16px;display:flex;gap:8px;">${wishlist.some(w=>w.coinId===coin.id)?'<button style="flex:1;padding:10px;border-radius:10px;border:0.5px solid rgba(57,255,20,0.3);background:rgba(57,255,20,0.08);color:#57ff7a;font-size:13px;cursor:default;">⭐ In wishlist</button>':`<button onclick="quickAddWish('${coin.id}','${coin.name}','${coin.symbol.toUpperCase()}',${coin.current_price});closeDetail();" style="flex:1;padding:10px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:rgba(255,255,255,0.6);font-family:var(--sans);font-size:13px;cursor:pointer;">+ Wishlist</button>`}<button onclick="closeDetail();switchTab('portfolio');setTimeout(openModal,100);" style="flex:1;padding:10px;border-radius:10px;border:0.5px solid var(--border2);background:transparent;color:rgba(255,255,255,0.6);font-family:var(--sans);font-size:13px;cursor:pointer;">+ Ho questa crypto</button></div>`;document.getElementById('detail-overlay').classList.add('open');document.getElementById('detail-overlay').scrollTop=0;}
+function closeDetail(){document.getElementById('detail-overlay').classList.remove('open');}
+
+const GLOSSARY=[{q:"Cos'è una crypto?",a:"Una criptovaluta è una valuta digitale che esiste solo online. Non è controllata da nessuna banca o governo — funziona su una rete decentralizzata chiamata blockchain. Bitcoin è stata la prima, creata nel 2009."},{q:"Cos'è la blockchain?",a:"È un registro digitale pubblico e immutabile dove vengono registrate tutte le transazioni. Immagina un quaderno condiviso da milioni di persone dove nessuno può cancellare o modificare ciò che è già scritto."},{q:"Cos'è il Fear & Greed Index?",a:"È un indicatore che misura l'emozione del mercato su una scala da 0 (paura estrema) a 100 (euforia totale). Quando tutti hanno paura (sotto 25), storicamente è spesso un buon momento per comprare. Quando tutti sono euforici (sopra 75), spesso il mercato è vicino a un massimo."},{q:"Cos'è la BTC Dominance?",a:"È la percentuale di Bitcoin rispetto all'intero mercato crypto. Se è alta (>55%), significa che i soldi si concentrano su Bitcoin e le altcoin soffrono. Se è bassa (<45%), il denaro si sposta verso le altcoin che possono crescere di più."},{q:"Cos'è il DCA?",a:"Dollar Cost Averaging: consiste nel comprare un importo fisso a intervalli regolari (es. 50 euro ogni mese) invece di investire tutto in una volta. Riduce il rischio di comprare esattamente nel momento sbagliato perché il prezzo medio si distribuisce nel tempo."},{q:"Cos'è la Market Cap?",a:"È il valore totale di una crypto. Si calcola moltiplicando il prezzo per il numero di monete in circolazione. Una market cap alta indica una crypto più stabile. Bitcoin ha la market cap più alta."},{q:"Cosa sono le altcoin?",a:"Tutte le crypto che non sono Bitcoin si chiamano altcoin. Ethereum, Solana, Cardano sono altcoin. Tendono ad essere più volatili di Bitcoin — possono guadagnare o perdere molto di più in poco tempo."},{q:"Cos'è un wallet?",a:"È dove conservi le tue crypto. Può essere un conto su un exchange come Binance (loro lo gestiscono) oppure un wallet personale dove solo tu hai le chiavi. Regola base: not your keys, not your coins."},{q:"Cos'è lo staking?",a:"È come mettere le crypto al lavoro per guadagnare interessi passivi. Blocchi le tue monete per un periodo e in cambio ricevi una rendita. Cardano, Ethereum e molte altre crypto offrono questa possibilità."},{q:"Cos'è un exchange?",a:"È una piattaforma dove puoi comprare, vendere e scambiare crypto. Binance, Coinbase e Kraken sono esempi di exchange centralizzati. Funzionano come una borsa tradizionale ma per le crypto."},{q:"Cos'è la volatilità?",a:"Misura quanto il prezzo oscilla nel tempo. Le crypto sono molto volatili — possono salire o scendere del 20-30% in pochi giorni. Questo le rende potenzialmente redditizie ma anche rischiose."},{q:"Cosa significa HODL?",a:"Viene da un errore di battitura di hold (tenere). Nel mondo crypto significa tenere le proprie monete a lungo termine senza vendere durante i cali. È la strategia più semplice e spesso la più efficace."}];
+
+function guideAnswer(step,answer){guideAnswers[step]=answer;const steps=document.querySelectorAll('.guide-step');if(step<2){steps[step].classList.remove('active');steps[step+1].classList.add('active');}else{steps[step].classList.remove('active');showGuideResult();}}
+function showGuideResult(){const amt=guideAnswers[0];const time=guideAnswers[1];const risk=guideAnswers[2];let title,text;if(risk==='low'){title='🛡️ Profilo conservativo — inizia con cautela';text='La volatilità delle crypto ti crea stress: questo è importante saperlo prima di investire.\n\nConsiglio: se vuoi comunque provare, inizia con un importo minimo (20-50 euro) che sei disposto a perdere completamente. Scegli solo Bitcoin o Ethereum — sono le più stabili del settore.\n\nEvita le altcoin piccole o sconosciute. Considera anche che esistono investimenti meno volatili se il rischio ti pesa molto.';}else if(risk==='medium'&&time==='short'){title='⚖️ Profilo moderato a breve termine — attenzione';text='Vuoi risultati presto ma non hai una tolleranza alta al rischio. Questa è la combinazione più difficile nelle crypto.\n\nConsiglio: se investi nel breve termine, devi monitorare attivamente. Punta su Bitcoin (70%) ed Ethereum (30%). Imposta un obiettivo chiaro: +20% e prendo profitto. Usa la Wishlist per comprare durante i cali.';}else if(time==='long'||risk==='high'){title='🚀 Profilo orientato alla crescita — ottima mentalità';text='Hai la mentalità giusta per le crypto: pazienza e capacità di reggere i cali.\n\nConsiglio: diversifica su più asset. Bitcoin (50%) come base stabile, Ethereum (30%) per il potenziale DeFi, e una piccola parte (20%) su altcoin solide nel top 20 come Solana o BNB. Usa il DCA — compra una cifra fissa ogni mese. Con un orizzonte lungo, i cali sono opportunità.';}else{title='📊 Profilo bilanciato — approccio sensato';text='Hai un approccio equilibrato: vuoi capire e crescere senza rischiare tutto.\n\nConsiglio: inizia con Bitcoin ed Ethereum in parti uguali. Usa la Wishlist per aspettare i cali prima di comprare. Reinvesti gradualmente nel tempo e studia il mercato attraverso questa app prima di diversificare.';}document.getElementById('guide-result-title').textContent=title;document.getElementById('guide-result-text').textContent=text;document.getElementById('guide-result').classList.add('show');}
+function restartGuide(){guideAnswers={};document.querySelectorAll('.guide-step').forEach((s,i)=>s.classList.toggle('active',i===0));document.getElementById('guide-result').classList.remove('show');}
+function runSimulator(){if(!coins.length)return;const amount=parseFloat(document.getElementById('sim-amount').value)||100;const period=parseInt(document.getElementById('sim-period').value);const top10=coins.slice(0,10);const results=top10.map(c=>{const chg=period===7?(c.price_change_percentage_24h||0)*3:period===30?(c.price_change_percentage_7d_in_currency||0)*4:(c.price_change_percentage_7d_in_currency||0)*13;const finalVal=amount*(1+chg/100);const profit=finalVal-amount;return{name:c.name,chg,finalVal,profit};}).sort((a,b)=>b.chg-a.chg);document.getElementById('sim-results').innerHTML=`<div class="sim-result"><div style="font-size:11px;color:rgba(255,255,255,0.4);font-family:var(--mono);margin-bottom:8px;">Se avessi investito €${amount} — top 10 crypto</div>${results.map(r=>`<div class="sim-result-row"><span class="sim-result-name">${r.name}</span><span class="sim-result-val ${r.profit>=0?'positive':'negative'}">€${r.finalVal.toFixed(0)} (${r.chg>=0?'+':''}${r.chg.toFixed(0)}%)</span></div>`).join('')}<div style="font-size:10px;color:rgba(255,255,255,0.3);margin-top:8px;font-family:var(--mono);">* Stima basata sulle variazioni recenti</div></div>`;}
+function renderGlossary(){const el=document.getElementById('glossary-list');if(!el)return;el.innerHTML=GLOSSARY.map((item,i)=>`<div class="glossary-item"><div class="glossary-q" onclick="toggleGlossary(${i})"><span>${item.q}</span><span id="garrow-${i}" style="color:rgba(255,255,255,0.3);font-size:16px;">+</span></div><div class="glossary-a" id="gans-${i}">${item.a}</div></div>`).join('');}
+function toggleGlossary(i){const ans=document.getElementById('gans-'+i);const arrow=document.getElementById('garrow-'+i);const isOpen=ans.classList.contains('open');document.querySelectorAll('.glossary-a').forEach(a=>a.classList.remove('open'));document.querySelectorAll('[id^=garrow-]').forEach(a=>a.textContent='+');if(!isOpen){ans.classList.add('open');arrow.textContent='−';}}
+
+async function loadAll(){const icon=document.getElementById('ricon');icon.classList.add('spin');try{const [gRes,cRes,fgRes]=await Promise.all([fetch('https://api.coingecko.com/api/v3/global'),fetch('https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d'),fetch('https://api.alternative.me/fng/')]);globalData=(await gRes.json()).data;coins=await cRes.json();fg=(await fgRes.json()).data[0];renderMarket();const active=document.querySelector('.panel.active');if(active&&active.id==='panel-opportunities')renderOpportunities();if(active&&active.id==='panel-portfolio')renderPortfolio();if(active&&active.id==='panel-wishlist')renderWishlist();if(active&&active.id==='panel-scopri'){runSimulator();}checkAlerts();}catch(e){document.getElementById('situation-card').innerHTML='<div class="situation-card bad"><div class="sit-emoji">❌</div><div class="sit-title">Errore di connessione</div><div class="sit-desc">Non riesco a caricare i dati. Controlla la connessione e riprova.</div></div>';}icon.classList.remove('spin');}
+
+renderGlossary();
+checkAuth();
+cloudLoad().then(() => {
+  loadAll();
+  setInterval(loadAll, 5*60*1000);
+});
+</script>
+</body>
+</html>
