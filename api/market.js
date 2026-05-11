@@ -7,8 +7,8 @@ export default async function handler(req, res) {
   const { endpoint } = req.query;
 
   const urls = {
-    global: 'https://api.coingecko.com/api/v3/global',
-    markets: 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d',
+    global: 'https://pro-api.coingecko.com/api/v3/global',
+    markets: 'https://pro-api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=100&page=1&sparkline=false&price_change_percentage=24h,7d',
     fng: 'https://api.alternative.me/fng/'
   };
 
@@ -16,8 +16,11 @@ export default async function handler(req, res) {
   if (!url) return res.status(400).json({ error: 'Invalid endpoint' });
 
   try {
-    const fetchUrl = endpoint === 'fng' ? url : url + '&x_cg_demo_api_key=' + CG_KEY;
-    const r = await fetch(fetchUrl);
+    const headers = endpoint === 'fng' 
+      ? {} 
+      : { 'x-cg-demo-api-key': CG_KEY };
+    
+    const r = await fetch(url, { headers });
     const data = await r.json();
     res.setHeader('Cache-Control', 's-maxage=60');
     return res.status(200).json(data);
