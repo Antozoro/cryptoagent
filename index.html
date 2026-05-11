@@ -4,8 +4,9 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>ZoronoAnto Crypto</title>
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1610'/><text y='72' x='50' text-anchor='middle' font-size='65'>⚔️</text></svg>"/>
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='20' fill='%230d1610'/><text y='72' x='50' text-anchor='middle' font-size='65'>⚔️</text></svg>"/>
+<link rel="icon" href="/favicon.ico" type="image/x-icon"/>
+<link rel="shortcut icon" href="/favicon.ico" type="image/x-icon"/>
+<link rel="apple-touch-icon" href="/favicon.ico"/>
 <meta name="apple-mobile-web-app-capable" content="yes"/>
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
 <meta name="apple-mobile-web-app-title" content="ZoronoAnto"/>
@@ -348,55 +349,61 @@ const TG_TOKEN = '8375937027:AAFUM8KeL0rd05IteyvAtPrJQu7Mapa4Hek';
 const TG_CHAT = '253145198';
 const TG_URL = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`;
 
-// CLOUD SYNC
-const BIN_ID = '6a01d25dc0954111d8092136';
-const BIN_KEY = '$2a$10$PwX2t3Nvv6ee6F9sbrZBLeibyPt4DJiepKu6CmkPJylZ7sfJ.2k7u';
-const BIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+// TELEGRAM SYNC
+const SYNC_TAG = '🔄SYNC:';
 let syncTimeout = null;
 let lastSyncHash = '';
 
-async function cloudLoad() {
+async function tgSyncSave() {
+  const data = { positions, wishlist };
+  const hash = JSON.stringify(data);
+  if (hash === lastSyncHash) return;
+  lastSyncHash = hash;
+  localStorage.setItem('ca_positions', JSON.stringify(positions));
+  localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
   try {
-    const r = await fetch(BIN_URL+'/latest', {
-      headers: {'X-Master-Key': BIN_KEY}
+    const payload = SYNC_TAG + JSON.stringify(data);
+    await fetch(TG_URL, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify({chat_id: TG_CHAT, text: payload})
     });
+    const si = document.getElementById('sync-indicator');
+    if(si) { si.textContent='☁️ sync'; setTimeout(()=>{si.textContent='';},2000); }
+  } catch(e) { console.log('TG sync save failed:', e); }
+}
+
+async function tgSyncLoad() {
+  try {
+    const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/getUpdates?limit=50&offset=-50`);
     const d = await r.json();
-    const data = d.record;
-    if (data.positions) { positions = data.positions; }
-    if (data.wishlist) { wishlist = data.wishlist; }
-    console.log('Cloud sync: loaded', positions.length, 'positions,', wishlist.length, 'wishlist items');
+    if (!d.ok) throw new Error('TG API error');
+    const messages = d.result.map(u => u.message).filter(Boolean).reverse();
+    for (const msg of messages) {
+      if (msg.text && msg.text.startsWith(SYNC_TAG)) {
+        const data = JSON.parse(msg.text.slice(SYNC_TAG.length));
+        if (data.positions) positions = data.positions;
+        if (data.wishlist) wishlist = data.wishlist;
+        localStorage.setItem('ca_positions', JSON.stringify(positions));
+        localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
+        lastSyncHash = JSON.stringify(data);
+        console.log('TG sync: loaded', positions.length, 'positions');
+        return;
+      }
+    }
+    // No sync message found, use localStorage
+    positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
+    wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
   } catch(e) {
-    console.log('Cloud load failed, using localStorage:', e);
+    console.log('TG sync load failed, using localStorage:', e);
     positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
     wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
   }
 }
 
-async function cloudSave() {
-  const data = { positions, wishlist };
-  const hash = JSON.stringify(data);
-  if (hash === lastSyncHash) return;
-  lastSyncHash = hash;
-  // Also save to localStorage as backup
-  localStorage.setItem('ca_positions', JSON.stringify(positions));
-  localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
-  try {
-    await fetch(BIN_URL, {
-      method: 'PUT',
-      headers: {'Content-Type': 'application/json', 'X-Master-Key': BIN_KEY},
-      body: JSON.stringify(data)
-    });
-    const si = document.getElementById('sync-indicator');
-    if(si) { si.textContent='☁️ sync'; setTimeout(()=>{si.textContent='';},2000); }
-    console.log('Cloud sync: saved');
-  } catch(e) {
-    console.log('Cloud save failed:', e);
-  }
-}
-
 function scheduleSave() {
   clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(cloudSave, 1500);
+  syncTimeout = setTimeout(tgSyncSave, 1500);
 }
 
 function checkAuth(){if(localStorage.getItem('ca_auth')===APP_PASS)return;document.getElementById('lockscreen').style.display='flex';document.querySelector('.app').style.display='none';document.querySelector('.bottom-nav').style.display='none';}
@@ -480,7 +487,7 @@ async function loadAll(){const icon=document.getElementById('ricon');icon.classL
 
 renderGlossary();
 checkAuth();
-cloudLoad().then(() => {
+tgSyncLoad().then(() => {
   loadAll();
   setInterval(loadAll, 5*60*1000);
 });
