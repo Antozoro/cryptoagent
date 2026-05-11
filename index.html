@@ -468,7 +468,7 @@ function renderLog(){const el=document.getElementById('notif-log');if(!el)return
 
 async function sendTestMessage(){const btn=document.getElementById('test-btn');btn.disabled=true;btn.textContent='Invio...';const ok=await sendTelegram('⚔️ <b>ZoronoAnto Crypto — Bot attivo!</b>\n\n✅ Tutto funziona correttamente.\n\nRiceverai notifiche divise per categoria:\n💼 <b>PORTAFOGLIO</b> — le tue crypto\n🎯 <b>WISHLIST</b> — prezzi target\n📊 <b>MERCATO</b> — segnali generali\n🚀 <b>OCCASIONI</b> — opportunita top 100');if(ok){btn.textContent='✅ Inviato! Controlla Telegram';addLog('Messaggio di test inviato','sent');}else{btn.textContent='❌ Errore — riprova';addLog('Errore invio test','error');}setTimeout(()=>{btn.disabled=false;btn.textContent='📨 Invia messaggio di test';},3000);}
 
-function switchTab(t){['market','opportunities','portfolio','alerts','wishlist','scopri','chat'].forEach(x=>{document.getElementById('panel-'+x).classList.toggle('active',x===t);document.getElementById('nav-'+x).classList.toggle('active',x===t);});if(t==='portfolio')renderPortfolio();if(t==='opportunities')renderOpportunities();if(t==='alerts')renderLog();if(t==='wishlist')renderWishlist();if(t==='scopri'){renderGlossary();runSimulator();}}
+function switchTab(t){['market','opportunities','portfolio','alerts','wishlist','scopri','chat'].forEach(x=>{const p=document.getElementById('panel-'+x);const n=document.getElementById('nav-'+x);if(p)p.classList.toggle('active',x===t);if(n)n.classList.toggle('active',x===t);});if(t==='portfolio')renderPortfolio();if(t==='opportunities')renderOpportunities();if(t==='alerts')renderLog();if(t==='wishlist')renderWishlist();if(t==='scopri'){renderGlossary();runSimulator();}}
 
 function fmt(n){if(!n&&n!==0)return'—';if(n>=1e12)return'$'+(n/1e12).toFixed(2)+'T';if(n>=1e9)return'$'+(n/1e9).toFixed(2)+'B';if(n>=1e6)return'$'+(n/1e6).toFixed(2)+'M';if(n>=1000)return'$'+n.toLocaleString('en-US',{maximumFractionDigits:2});if(n>=1)return'$'+n.toFixed(2);return'$'+n.toFixed(6);}
 
@@ -529,6 +529,89 @@ function renderGlossary(){const el=document.getElementById('glossary-list');if(!
 function toggleGlossary(i){const ans=document.getElementById('gans-'+i);const arrow=document.getElementById('garrow-'+i);const isOpen=ans.classList.contains('open');document.querySelectorAll('.glossary-a').forEach(a=>a.classList.remove('open'));document.querySelectorAll('[id^=garrow-]').forEach(a=>a.textContent='+');if(!isOpen){ans.classList.add('open');arrow.textContent='−';}}
 
 async function loadAll(){const icon=document.getElementById('ricon');icon.classList.add('spin');try{const [gRes,cRes,fgRes]=await Promise.all([fetch('/api/market?endpoint=global'),fetch('/api/market?endpoint=markets'),fetch('/api/market?endpoint=fng')]);globalData=(await gRes.json()).data;coins=await cRes.json();fg=(await fgRes.json()).data[0];renderMarket();const active=document.querySelector('.panel.active');if(active&&active.id==='panel-opportunities')renderOpportunities();if(active&&active.id==='panel-portfolio')renderPortfolio();if(active&&active.id==='panel-wishlist')renderWishlist();if(active&&active.id==='panel-scopri'){runSimulator();}checkAlerts();}catch(e){document.getElementById('situation-card').innerHTML='<div class="situation-card bad"><div class="sit-emoji">❌</div><div class="sit-title">Errore di connessione</div><div class="sit-desc">Non riesco a caricare i dati. Controlla la connessione e riprova.</div></div>';}icon.classList.remove('spin');}
+
+
+// CHAT AI
+let chatHistory = [];
+
+function buildMarketContext() {
+  if (!coins.length||!globalData||!fg) return 'Dati non caricati.';
+  const fgv=parseInt(fg.value);
+  const btcDom=globalData.market_cap_percentage.btc.toFixed(1);
+  const mcapChg=(globalData.market_cap_change_percentage_24h_usd||0).toFixed(2);
+  const top5=coins.slice(0,5).map(c=>c.name+': $'+c.current_price+' ('+(c.price_change_percentage_24h||0).toFixed(1)+'% 24h)').join(', ');
+  const gainers=[...coins].sort((a,b)=>(b.price_change_percentage_24h||0)-(a.price_change_percentage_24h||0)).slice(0,3).map(c=>c.name+' +'+(c.price_change_percentage_24h||0).toFixed(1)+'%').join(', ');
+  const losers=[...coins].sort((a,b)=>(a.price_change_percentage_24h||0)-(b.price_change_percentage_24h||0)).slice(0,3).map(c=>c.name+' '+(c.price_change_percentage_24h||0).toFixed(1)+'%').join(', ');
+  return 'Fear&Greed:'+fgv+'/100 ('+fg.value_classification+') | BTC Dom:'+btcDom+'% | MCap 24h:'+mcapChg+'% | Top5:'+top5+' | Migliori:'+gainers+' | Peggiori:'+losers;
+}
+
+function buildPortfolioContext() {
+  if (!positions.length) return 'Nessuna posizione.';
+  return positions.map(pos=>{const coin=coins.find(c=>c.id===pos.coinId);const cp=coin?coin.current_price:pos.buyPrice;const pnlPct=((cp-pos.buyPrice)/pos.buyPrice*100).toFixed(1);return pos.coinName+' ('+pos.coinSymbol+'): '+pos.qty+' unita, pagato $'+pos.buyPrice+', ora $'+cp+', P&L:'+pnlPct+'%';}).join(' | ');
+}
+
+function addChatMsg(role, text) {
+  const container=document.getElementById('chat-messages');
+  if (!container) return;
+  const now=new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const isUser=role==='user';
+  const div=document.createElement('div');
+  div.style.cssText='max-width:88%;align-self:'+(isUser?'flex-end':'flex-start')+';';
+  div.innerHTML='<div style="padding:10px 14px;border-radius:14px;'+(isUser?'border-bottom-right-radius':'border-bottom-left-radius')+':4px;font-size:13px;line-height:1.6;background:'+(isUser?'rgba(57,255,20,0.15)':'var(--bg3)')+';color:'+(isUser?'#f0f0f5':'rgba(255,255,255,0.85)')+';border:0.5px solid '+(isUser?'rgba(57,255,20,0.2)':'var(--border)')+';">'+text.replace(/
+/g,'<br>')+'</div><div style="font-size:10px;color:var(--text3);font-family:var(--mono);margin-top:3px;padding:0 4px;'+(isUser?'text-align:right;':'')+' ">'+now+'</div>';
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+}
+
+function addTypingIndicator() {
+  const container=document.getElementById('chat-messages');
+  if (!container) return;
+  const div=document.createElement('div');
+  div.id='typing-msg';
+  div.style.cssText='max-width:88%;align-self:flex-start;';
+  div.innerHTML='<div style="padding:10px 14px;border-radius:14px;border-bottom-left-radius:4px;background:var(--bg3);border:0.5px solid var(--border);display:flex;gap:4px;align-items:center;">'+['','',''].map((_,i)=>'<span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.4);display:inline-block;animation:typing 1.2s '+[0,0.2,0.4][i]+'s infinite;"></span>').join('')+'</div>';
+  container.appendChild(div);
+  container.scrollTop=container.scrollHeight;
+}
+
+function removeTypingIndicator(){const el=document.getElementById('typing-msg');if(el)el.remove();}
+
+function suggestMsg(text){const input=document.getElementById('chat-input');if(input){input.value=text;sendChat();}}
+
+async function sendChat() {
+  const input=document.getElementById('chat-input');
+  const btn=document.getElementById('chat-send');
+  if (!input||!btn) return;
+  const text=input.value.trim();
+  if (!text||btn.disabled) return;
+  input.value='';
+  btn.disabled=true;
+  const sug=document.getElementById('chat-suggestions');
+  if(sug) sug.style.display='none';
+  addChatMsg('user',text);
+  chatHistory.push({role:'user',content:text});
+  addTypingIndicator();
+  try {
+    const r=await fetch('/api/market?endpoint=chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({messages:chatHistory,marketContext:buildMarketContext(),portfolioContext:buildPortfolioContext()})});
+    const d=await r.json();
+    removeTypingIndicator();
+    const reply=d.reply||('Errore: '+(d.error||'risposta non valida'));
+    addChatMsg('ai',reply);
+    chatHistory.push({role:'assistant',content:reply});
+    if(chatHistory.length>20)chatHistory=chatHistory.slice(-16);
+  } catch(e) {
+    removeTypingIndicator();
+    addChatMsg('ai','Errore di connessione. Riprova tra qualche secondo.');
+    chatHistory.pop();
+  }
+  btn.disabled=false;
+  input.focus();
+}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  const input=document.getElementById('chat-input');
+  if(input) input.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendChat();}});
+});
 
 renderGlossary();
 checkAuth();
