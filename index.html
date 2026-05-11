@@ -349,12 +349,29 @@ const TG_TOKEN = '8375937027:AAFUM8KeL0rd05IteyvAtPrJQu7Mapa4Hek';
 const TG_CHAT = '253145198';
 const TG_URL = `https://api.telegram.org/bot${TG_TOKEN}/sendMessage`;
 
-// TELEGRAM SYNC
-const SYNC_TAG = '🔄SYNC:';
+// GITHUB SYNC via Vercel proxy
 let syncTimeout = null;
 let lastSyncHash = '';
 
-async function tgSyncSave() {
+async function ghSyncLoad() {
+  try {
+    const r = await fetch('/api/market?endpoint=sync-load');
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    const data = await r.json();
+    if (data.positions) positions = data.positions;
+    if (data.wishlist) wishlist = data.wishlist;
+    localStorage.setItem('ca_positions', JSON.stringify(positions));
+    localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
+    lastSyncHash = JSON.stringify(data);
+    console.log('GH sync: loaded', positions.length, 'positions');
+  } catch(e) {
+    console.log('GH sync load failed, using localStorage:', e);
+    positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
+    wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
+  }
+}
+
+async function ghSyncSave() {
   const data = { positions, wishlist };
   const hash = JSON.stringify(data);
   if (hash === lastSyncHash) return;
@@ -363,55 +380,26 @@ async function tgSyncSave() {
   localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
   const si = document.getElementById('sync-indicator');
   try {
-    const payload = SYNC_TAG + JSON.stringify(data);
-    if(si) si.textContent='⏳ sync...';
-    const r = await fetch(TG_URL, {
+    if(si) si.textContent = '⏳ sync...';
+    const r = await fetch('/api/market?endpoint=sync-save', {
       method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify({chat_id: TG_CHAT, text: payload})
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
     });
     const d = await r.json();
-    if(d.ok) {
-      if(si) { si.textContent='☁️ sync OK'; setTimeout(()=>{si.textContent='';},3000); }
+    if (d.ok) {
+      if(si) { si.textContent = '☁️ sync OK'; setTimeout(()=>{si.textContent='';},3000); }
     } else {
-      if(si) { si.textContent='❌ sync error: '+d.description; setTimeout(()=>{si.textContent='';},5000); }
+      if(si) { si.textContent = '❌ ' + (d.error||'error'); setTimeout(()=>{si.textContent='';},5000); }
     }
   } catch(e) {
-    if(si) { si.textContent='❌ '+e.message; setTimeout(()=>{si.textContent='';},5000); }
-  }
-}
-
-async function tgSyncLoad() {
-  try {
-    const r = await fetch(`https://api.telegram.org/bot${TG_TOKEN}/getUpdates?limit=50&offset=-50`);
-    const d = await r.json();
-    if (!d.ok) throw new Error('TG API error');
-    const messages = d.result.map(u => u.message).filter(Boolean).reverse();
-    for (const msg of messages) {
-      if (msg.text && msg.text.startsWith(SYNC_TAG)) {
-        const data = JSON.parse(msg.text.slice(SYNC_TAG.length));
-        if (data.positions) positions = data.positions;
-        if (data.wishlist) wishlist = data.wishlist;
-        localStorage.setItem('ca_positions', JSON.stringify(positions));
-        localStorage.setItem('ca_wishlist', JSON.stringify(wishlist));
-        lastSyncHash = JSON.stringify(data);
-        console.log('TG sync: loaded', positions.length, 'positions');
-        return;
-      }
-    }
-    // No sync message found, use localStorage
-    positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
-    wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
-  } catch(e) {
-    console.log('TG sync load failed, using localStorage:', e);
-    positions = JSON.parse(localStorage.getItem('ca_positions') || '[]');
-    wishlist = JSON.parse(localStorage.getItem('ca_wishlist') || '[]');
+    if(si) { si.textContent = '❌ ' + e.message; setTimeout(()=>{si.textContent='';},5000); }
   }
 }
 
 function scheduleSave() {
   clearTimeout(syncTimeout);
-  syncTimeout = setTimeout(tgSyncSave, 1500);
+  syncTimeout = setTimeout(ghSyncSave, 1500);
 }
 
 function checkAuth(){if(localStorage.getItem('ca_auth')===APP_PASS)return;document.getElementById('lockscreen').style.display='flex';document.querySelector('.app').style.display='none';document.querySelector('.bottom-nav').style.display='none';}
@@ -495,7 +483,7 @@ async function loadAll(){const icon=document.getElementById('ricon');icon.classL
 
 renderGlossary();
 checkAuth();
-tgSyncLoad().then(() => {
+ghSyncLoad().then(() => {
   loadAll();
   setInterval(loadAll, 5*60*1000);
 });
