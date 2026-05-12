@@ -540,7 +540,16 @@ document.getElementById('modal-save').onclick=function(){
   var qty=parseFloat(document.getElementById('qty').value),bp=parseFloat(document.getElementById('buyprice').value);
   if(!qty||qty<=0){alert('Inserisci la quantita');return;}
   if(!bp||bp<=0){alert('Inserisci il prezzo pagato');return;}
-  positions.push({coinId:selectedCoin.id,coinName:selectedCoin.name,coinSymbol:selectedCoin.sym,qty:qty,buyPrice:bp});
+  var existing=positions.find(function(p){return p.coinId===selectedCoin.id;});
+  if(existing){
+    var totalCost=existing.qty*existing.buyPrice + qty*bp;
+    var totalQty=existing.qty+qty;
+    existing.buyPrice=parseFloat((totalCost/totalQty).toFixed(6));
+    existing.qty=parseFloat(totalQty.toFixed(8));
+    alert(selectedCoin.name+' aggiornato! Prezzo medio: $'+existing.buyPrice);
+  } else {
+    positions.push({coinId:selectedCoin.id,coinName:selectedCoin.name,coinSymbol:selectedCoin.sym,qty:qty,buyPrice:bp});
+  }
   scheduleSave();closeModal();renderPortfolio();
 };
 
@@ -589,19 +598,19 @@ async function checkAlerts(){
   if(!coins.length)return;
   var now=Date.now(),CD=4*60*60*1000,fgv=fg?parseInt(fg.value):50;
   lastAlerts=JSON.parse(localStorage.getItem('ca_lastalerts')||'{}');
-  if(fgv<25){var k='fg';if(!lastAlerts[k]||now-lastAlerts[k]>CD){var ok=await sendTelegram('MERCATO - Paura estrema! Fear & Greed: '+fgv+'/100. Possibile occasione per chi ha pazienza.');if(ok){lastAlerts[k]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('Fear & Greed estremo ('+fgv+')','sent');}}}
+  if(fgv<25){var k='fg';if(!lastAlerts[k]||now-lastAlerts[k]>CD){var ok=await sendTelegram('📊 MERCATO — Paura estrema!\n\nIndice Fear & Greed: '+fgv+'/100\n\nStoricamente questi momenti possono essere occasioni per chi ha pazienza. Non agire d impulso.');if(ok){lastAlerts[k]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog('Fear & Greed estremo ('+fgv+')','sent');}}}
   for(var i=0;i<positions.length;i++){
     var pos=positions[i],coin=coins.find(function(c){return c.id===pos.coinId;});if(!coin)continue;
     var pct=((coin.current_price-pos.buyPrice)/pos.buyPrice)*100;
-    var k2='d_'+pos.coinId;if(pct<=-10&&(!lastAlerts[k2]||now-lastAlerts[k2]>CD)){var ok=await sendTelegram('PORTAFOGLIO - '+pos.coinName+' in calo. In perdita del '+Math.abs(pct).toFixed(1)+'%. Comprato: $'+pos.buyPrice+' | Ora: $'+coin.current_price+'. Potrebbe essere un momento per aggiungere (DCA).');if(ok){lastAlerts[k2]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(pos.coinName+' -'+Math.abs(pct).toFixed(1)+'%','sent');}}
-    var k3='p_'+pos.coinId;if(pct>=20&&(!lastAlerts[k3]||now-lastAlerts[k3]>CD)){var ok=await sendTelegram('PORTAFOGLIO - '+pos.coinName+' in forte profitto. Guadagno: +'+pct.toFixed(1)+'%. Comprato: $'+pos.buyPrice+' | Ora: $'+coin.current_price+'. Valuta se vendere una parte.');if(ok){lastAlerts[k3]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(pos.coinName+' +'+pct.toFixed(1)+'%','sent');}}
+    var k2='d_'+pos.coinId;if(pct<=-10&&(!lastAlerts[k2]||now-lastAlerts[k2]>CD)){var ok=await sendTelegram('💼 PORTAFOGLIO — '+pos.coinName+' in calo\n\n📉 Sei in perdita del '+Math.abs(pct).toFixed(1)+'%\n\nHai comprato a: $'+pos.buyPrice+'\nPrezzo attuale: $'+coin.current_price+'\n\n💡 Potrebbe essere un buon momento per aggiungere gradualmente (DCA).');if(ok){lastAlerts[k2]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(pos.coinName+' -'+Math.abs(pct).toFixed(1)+'%','sent');}}
+    var k3='p_'+pos.coinId;if(pct>=20&&(!lastAlerts[k3]||now-lastAlerts[k3]>CD)){var ok=await sendTelegram('💼 PORTAFOGLIO — '+pos.coinName+' in forte profitto\n\n📈 Sei in guadagno del +'+pct.toFixed(1)+'%\n\nHai comprato a: $'+pos.buyPrice+'\nPrezzo attuale: $'+coin.current_price+'\n\n💡 Potresti valutare di vendere una parte per assicurarti il guadagno.');if(ok){lastAlerts[k3]=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(pos.coinName+' +'+pct.toFixed(1)+'%','sent');}}
   }
   for(var j=0;j<wishlist.length;j++){
     var w=wishlist[j],wc=coins.find(function(c){return c.id===w.coinId;});if(!wc)continue;
     var wcp=wc.current_price,wtp=w.addedPrice*(1-w.threshold/100),wchg=((wcp-w.addedPrice)/w.addedPrice*100);
     var wk='w_'+w.coinId;
-    if(wcp<=wtp&&(!lastAlerts[wk+'d']||now-lastAlerts[wk+'d']>CD)){var ok=await sendTelegram('WISHLIST - '+w.coinName+' al prezzo target! Quando aggiunta: $'+w.addedPrice.toFixed(4)+' | Ora: $'+wcp.toFixed(4)+'. Calo: -'+Math.abs(wchg).toFixed(1)+'%. Apri l app per l analisi.');if(ok){lastAlerts[wk+'d']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(w.coinName+' al target!','sent');}}
-    else if(wcp>wtp&&((wcp-wtp)/wtp*100)<3&&(!lastAlerts[wk+'n']||now-lastAlerts[wk+'n']>CD)){var ok=await sendTelegram('WISHLIST - '+w.coinName+' quasi al target! Ora: $'+wcp.toFixed(4)+' | Target: $'+wtp.toFixed(4));if(ok){lastAlerts[wk+'n']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(w.coinName+' vicino al target','sent');}}
+    if(wcp<=wtp&&(!lastAlerts[wk+'d']||now-lastAlerts[wk+'d']>CD)){var ok=await sendTelegram('🎯 WISHLIST — '+w.coinName+' al prezzo target!\n\nQuando aggiunta: $'+w.addedPrice.toFixed(4)+'\nPrezzo attuale: $'+wcp.toFixed(4)+'\nCalo: -'+Math.abs(wchg).toFixed(1)+'%\n\n💡 Apri l app per l analisi completa prima di decidere.');if(ok){lastAlerts[wk+'d']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(w.coinName+' al target!','sent');}}
+    else if(wcp>wtp&&((wcp-wtp)/wtp*100)<3&&(!lastAlerts[wk+'n']||now-lastAlerts[wk+'n']>CD)){var ok=await sendTelegram('🎯 WISHLIST — '+w.coinName+' quasi al target!\n\nPrezzo attuale: $'+wcp.toFixed(4)+'\nTarget: $'+wtp.toFixed(4)+'\n\nTienila d occhio!');if(ok){lastAlerts[wk+'n']=now;localStorage.setItem('ca_lastalerts',JSON.stringify(lastAlerts));addLog(w.coinName+' vicino al target','sent');}}
   }
 }
 
